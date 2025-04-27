@@ -1,5 +1,5 @@
 source "https://rubygems.org"
-ruby "~> 3.3"
+ruby "3.4.2"
 
 gem "rails", "~> 8.0.2"
 gem "puma", ">= 5.0"
@@ -9,11 +9,11 @@ gem "sidekiq", "~> 7.3"
 gem "sidekiq-unique-jobs"
 gem "bootsnap", require: false
 gem "rack-cors"
-
 gem "image_processing", "~> 1.12"
 gem "mini_magick"
 gem "rtesseract"
-
+gem "annotaterb", require: false
+gem "active_storage_validations"
 gem "jbuilder"
 
 group :development, :test do

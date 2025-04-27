@@ -55,5 +55,9 @@ module Backend
                        request_specs: true
     end
     Rails.application.routes.default_url_options[:host] = config.backend_url
+
+    config.autoload_paths += %W(
+          #{config.root}/app/services
+        )
   end
 end
