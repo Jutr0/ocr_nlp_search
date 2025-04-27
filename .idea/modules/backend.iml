@@ -1266,6 +1266,41 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
+      <library name="interactor (v3.1.2) [path][gem]" type="rubylib">
+        <properties>
+          <option name="additionalInfo">
+            <AdditionalInfo>
+              <option name="authors" value="N/A" />
+              <option name="email" value="N/A" />
+              <option name="homepage" value="N/A" />
+              <option name="summary" value="N/A" />
+            </AdditionalInfo>
+          </option>
+          <option name="fromPath" value="true" />
+          <option name="name" value="interactor" />
+          <option name="requirePaths">
+            <list>
+              <option value="lib" />
+            </list>
+          </option>
+          <option name="url" value="file://$USER_HOME$/rubygemss/ocrnlpsearch/ruby/3.4.0/gems/interactor-3.1.2" />
+          <option name="version" value="3.1.2" />
+        </properties>
+        <CLASSES>
+          <root url="file://$USER_HOME$/rubygemss/ocrnlpsearch/ruby/3.4.0/gems/interactor-3.1.2/lib" />
+          <root url="file://$USER_HOME$/rubygemss/ocrnlpsearch/ruby/3.4.0/gems/interactor-3.1.2/spec" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$USER_HOME$/rubygemss/ocrnlpsearch/ruby/3.4.0/gems/interactor-3.1.2/lib" />
+          <root url="file://$USER_HOME$/rubygemss/ocrnlpsearch/ruby/3.4.0/gems/interactor-3.1.2/spec" />
+        </SOURCES>
+        <excluded>
+          <root url="file://$USER_HOME$/rubygemss/ocrnlpsearch/ruby/3.4.0/gems/interactor-3.1.2/spec" />
+        </excluded>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
       <library name="io-console (v0.8.0) [path][gem]" type="rubylib">
         <properties>
           <option name="additionalInfo">

@@ -1,13 +1,14 @@
 class DocumentsController < ApplicationController
   def create
-    @document = CreateDocument.new(document_params[:file]).call
+    result = CreateDocument.call!(file: document_params[:file])
 
+    @document = result.document
     render json: { id: @document.id, status: @document.status }, status: :created
   end
 
   private
 
   def document_params
-    params.require(:document).permit(:file)
+    params.permit(:file)
   end
 end

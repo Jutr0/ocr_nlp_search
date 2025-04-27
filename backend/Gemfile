@@ -15,6 +15,7 @@ gem "rtesseract"
 gem "annotaterb", require: false
 gem "active_storage_validations"
 gem "jbuilder"
+gem "interactor"
 
 group :development, :test do
   gem "rspec-rails", "~> 6.0"
