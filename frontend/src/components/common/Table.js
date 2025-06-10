@@ -25,7 +25,8 @@ const Table = ({
                    onPageChange,
                    onRowsPerPageChange,
                    onEdit,
-                   onDelete
+                   onDelete,
+                   fullHeight
                }) => {
     const paginatedRows = pagination
         ? data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
@@ -40,7 +41,7 @@ const Table = ({
     };
 
     return (
-        <Paper sx={{width: '100%', overflow: 'hidden'}}>
+        <Paper sx={{width: '100%', overflow: 'hidden', minHeight: fullHeight ? '100%' : undefined}} >
             <TableContainer>
                 <MUITable>
                     <TableHead>

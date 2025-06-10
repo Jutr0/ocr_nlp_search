@@ -6,6 +6,7 @@ import Box from '@mui/material/Box';
 import AuthorizedLinks from "./AuthorizedLinks";
 import UnauthorizedLinks from "./UnauthorizedLinks";
 import {AuthContext} from "../../../contexts/AuthContext";
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 const Navbar = () => {
 
@@ -22,9 +23,7 @@ const Navbar = () => {
                     {currentUser ? <AuthorizedLinks/> : <UnauthorizedLinks/>}
                 </Box>
                 {currentUser &&
-                    <Typography variant="caption" component="div" sx={{ml: 2}}>
-                        {currentUser.email}
-                    </Typography>
+                    <AccountCircleIcon fontSize="large"/>
                 }
             </Toolbar>
         </AppBar>

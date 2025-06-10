@@ -5,7 +5,7 @@ import {AuthContext} from "../../../contexts/AuthContext";
 import {ROLES} from "../../../utils/constants";
 
 const links = [
-    {path: '/', label: 'Home', roles: 'all'},
+    {path: '/documents', label: 'Documents', roles: [ROLES.USER]},
     {path: '/users', label: 'Users', roles: [ROLES.SUPERADMIN]},
 ]
 

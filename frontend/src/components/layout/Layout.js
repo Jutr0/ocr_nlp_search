@@ -1,15 +1,14 @@
 import Navbar from "./navbar/Navbar";
 import Box from "@mui/material/Box";
-import {Container} from "@mui/material";
+import {Card} from "@mui/material";
+import './Layout.scss';
 
 const Layout = ({children}) => {
-    return <Box>
+    return <Box className="layout">
         <Navbar/>
-        <Box component="main" sx={{py: 4}}>
-            <Container maxWidth="lg">
-                {children}
-            </Container>
-        </Box>
+        <Card className="content" elevation={5}>
+            {children}
+        </Card>
     </Box>
 }
 

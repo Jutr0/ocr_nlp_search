@@ -4,9 +4,10 @@ import {useContext} from "react";
 import {AuthContext} from "../../../contexts/AuthContext";
 import {ROLES} from "../../../utils/constants";
 import Users from "../../pages/Users";
+import Documents from "../../pages/documents/Documents";
 
 const routes = [
-    {path: '/', component: <Home/>, roles: 'all'},
+    {path: '/documents', component: <Documents/>, roles: [ROLES.USER]},
     {path: '/users', component: <Users/>, roles: [ROLES.SUPERADMIN]}
 ]
 

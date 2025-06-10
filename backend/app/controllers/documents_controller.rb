@@ -1,4 +1,12 @@
 class DocumentsController < ApplicationController
+
+  def index
+    @documents = Document.all.to_a
+    @documents.concat(Document.all.to_a)
+    @documents.concat(Document.all.to_a)
+    @documents.concat(Document.all.to_a)
+  end
+
   def create
     result = CreateDocument.call!(file: document_params[:file])
 
