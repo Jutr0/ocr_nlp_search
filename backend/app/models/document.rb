@@ -32,9 +32,7 @@ class Document < ApplicationRecord
     processing: "processing",
     ready:      "ready",
     failed:     "failed"
-  }
-
-  validates :file, attached: true, content_type: %w[application/pdf image/png image/jpeg]
+  }, default: :pending
 
   validates :status, presence: true
   validates :currency, length: { is: 3 }, allow_blank: true

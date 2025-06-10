@@ -7,11 +7,11 @@ require "active_job/railtie"
 require "active_record/railtie"
 require "active_storage/engine"
 require "action_controller/railtie"
-require "action_mailer/railtie"
+# require "action_mailer/railtie"
 require "action_mailbox/engine"
 require "action_text/engine"
 require "action_view/railtie"
-require "action_cable/engine"
+# require "action_cable/engine"
 # require "rails/test_unit/railtie"
 
 # Require the gems listed in Gemfile, including any gems
@@ -20,30 +20,15 @@ Bundler.require(*Rails.groups)
 
 module Backend
   class Application < Rails::Application
-    # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.0
 
-    # Please, add to the `ignore` list any other `lib` subdirectories that do
-    # not contain `.rb` files, or that should not be reloaded or eager loaded.
-    # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks])
 
-    # Configuration for the application, engines, and railties goes here.
-    #
-    # These settings can be overridden in specific environments using the files
-    # in config/environments, which are processed later.
-    #
-    # config.time_zone = "Central Time (US & Canada)"
-    # config.eager_load_paths << Rails.root.join("extras")
-
-    # Only loads a smaller set of middleware suitable for API only apps.
-    # Middleware like session, flash, cookies can be added back manually.
-    # Skip views, helpers and assets when generating a new resource.
-    config.api_only = true
+    config.frontend_url = ENV.fetch('FRONTEND_URL', 'http://localhost:3000')
+    config.backend_url = ENV.fetch("BACKEND_URL", 'http://localhost:4000')
     config.active_job.queue_adapter = :sidekiq
 
-    config.backend_url = ENV.fetch("BACKEND_URL", 'http://localhost:4000')
-    config.frontend_url = ENV.fetch('FRONTEND_URL', 'http://localhost:3000')
+    Rails.application.routes.default_url_options[:host] = config.backend_url
 
     config.generators do |g|
       g.orm :active_record, primary_key_type: :uuid
@@ -54,8 +39,7 @@ module Backend
                        controller_specs: true,
                        request_specs: true
     end
-    Rails.application.routes.default_url_options[:host] = config.backend_url
-
+    config.api_only = true
     config.autoload_paths += %W(
           #{config.root}/app/services
         )

@@ -3,7 +3,7 @@ import {useDropzone} from "react-dropzone";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
-const FileDropzone = ({onDrop, multiple = false}) => {
+const Dropzone = ({onDrop, multiple = false}) => {
     const {getRootProps, getInputProps, isDragActive} = useDropzone({
         onDrop,
         accept: {
@@ -30,14 +30,14 @@ const FileDropzone = ({onDrop, multiple = false}) => {
             <input {...getInputProps()} />
             <Box>
                 <Typography variant="h6" color="textSecondary">
-                    {isDragActive ? 'Upuść pliki tutaj...' : 'Przeciągnij i upuść pliki tutaj lub kliknij, aby wybrać'}
+                    {isDragActive ? 'Drop files here...' : 'Drag and drop files here or click to select'}
                 </Typography>
                 <Typography variant="body2" color="textSecondary" sx={{mt: 1}}>
-                    (Akceptowane pliki: .pdf, .jpg, .jpeg, .png)
+                    (Accepted files: .pdf, .jpg, .jpeg, .png)
                 </Typography>
             </Box>
         </Paper>
     );
 };
 
-export default FileDropzone;
+export default Dropzone;

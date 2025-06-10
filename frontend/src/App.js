@@ -1,16 +1,17 @@
 import Layout from "./components/layout/Layout";
-import UploadPage from "./components/pages/UploadPage";
-import {Route, Routes} from "react-router-dom";
+import AuthorizedRoutes from "./components/common/routes/AuthorizedRoutes";
+import UnauthorizedRoutes from "./components/common/routes/UnauthorizedRoutes";
+import {AuthContext} from "./contexts/AuthContext";
+import {useContext} from "react";
 
 function App() {
-    return <Layout>
-        <Routes>
-            <Route path="/documents">
-                <Route path="new" element={<UploadPage/>}/>
-                <Route path="" element={<div>Documents</div>}/>
-            </Route>
-        </Routes>
-    </Layout>
+    const {currentUser} = useContext(AuthContext);
+
+    return (
+        <Layout>
+            {currentUser ? <AuthorizedRoutes/> : <UnauthorizedRoutes/>}
+        </Layout>
+    );
 }
 
 export default App;

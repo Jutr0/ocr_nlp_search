@@ -1,68 +1,56 @@
 import axios from "axios";
 
-export const get = (url, callback, params) => {
+export const get = (url, params) => {
     const config = {
         url,
         params
     };
-    axios.request(config).then(
-        result => callback(result.data)
+    return axios.request(config).then(
+        result => result.data
     );
 };
 
-export const save = (url, method, data, callback = () => null, onError) => {
+export const save = (url, method, data) => {
     const config = {
         url,
         data,
         method
     };
-    axios.request(config).then(
-        result => callback(result.data)
-    ).catch(e => {
-        if (onError) {
-            onError(e);
-        } else {
-            throw e;
-        }
-    });
+    return axios.request(config).then(
+        result => result.data
+    )
 };
 
-export const remove = (url, callback, onError) => {
+export const remove = (url) => {
     const config = {
         url,
         method: "DELETE"
     }
-    axios.request(config).then(result => callback(result.data)).catch(e => {
-        if (onError) {
-            onError(e);
-        } else {
-            throw e;
-        }
-    })
+    return axios.request(config).then(result =>result.data)
 }
 
 export const buildActions = (resourceName, url) => {
     let apiUrl = url || resourceName + "s"
-    const getAll = (callback) => {
-        get(apiUrl, callback)
+    const getAll = () => {
+        return get(apiUrl)
     }
 
-    const getOne = (id, callback) => {
-        get(`${apiUrl}/${id}`, callback)
+    const getOne = (id) => {
+        return get(`${apiUrl}/${id}`)
     }
 
-    const saveResource = (resource, callback) => {
+    const saveResource = (resource) => {
         let method = "POST"
         if (resource.id) {
             apiUrl += `/${resource.id}`
             method = "PUT"
         }
-        save(apiUrl, method, {[resourceName]: resource}, callback)
+        return save(apiUrl, method, {[resourceName]: resource})
     }
-    const removeResource = (resource, callback, onError) => {
+    const deleteResource = (resource) => {
         apiUrl += `/${resource.id}`
-        remove(apiUrl, callback, onError)
+        return remove(apiUrl)
     }
 
-    return {getAll, getOne, save: saveResource, remove: removeResource}
+    return {getAll, getOne, save: saveResource, delete: deleteResource}
 }

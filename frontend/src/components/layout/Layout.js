@@ -1,4 +1,4 @@
-import Navbar from "./Navbar";
+import Navbar from "./navbar/Navbar";
 import Box from "@mui/material/Box";
 import {Container} from "@mui/material";
 

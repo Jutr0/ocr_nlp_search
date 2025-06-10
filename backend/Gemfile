@@ -1,28 +1,28 @@
 source "https://rubygems.org"
 ruby "3.4.2"
 
-gem "rails", "~> 8.0.2"
+gem "rails", "~> 8.0.1"
+gem "pg", "~> 1.1"
 gem "puma", ">= 5.0"
-gem "pg", "~> 1.5"
-gem "pgvector", "~> 0.3"
-gem "sidekiq", "~> 7.3"
-gem "sidekiq-unique-jobs"
 gem "bootsnap", require: false
-gem "rack-cors"
-gem "image_processing", "~> 1.12"
-gem "mini_magick"
-gem "rtesseract"
-gem "annotaterb", require: false
-gem "active_storage_validations"
+gem "thruster", require: false
+
+gem "devise"
+gem "devise-jwt"
+gem "cancancan"
 gem "jbuilder"
-gem "interactor"
+gem "sidekiq"
+gem "rack-cors"
+gem "dotenv-rails", groups: [:development, :test]
+gem "annotaterb"
 
 group :development, :test do
-  gem "rspec-rails", "~> 6.0"
-  gem "factory_bot_rails"
-  gem "faker"
-  gem "dotenv-rails"
   gem "debug", platforms: %i[mri windows], require: "debug/prelude"
-  gem "rubocop-rails-omakase", require: false
   gem "brakeman", require: false
+  gem "rubocop-rails-omakase", require: false
+  gem "rspec-rails"
+  gem "factory_bot_rails"
+  gem "shoulda-matchers"
 end
+
+gem "tzinfo-data", platforms: %i[windows jruby]

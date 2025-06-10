@@ -7,7 +7,7 @@ class CreateDocuments < ActiveRecord::Migration[8.0]
     create_table :documents, id: :uuid do |t|
       t.string :filename
       t.string :content_type
-      t.string :status, null: false, default: "pending"
+      t.string :status, null: false
 
       t.string :doc_type
       t.decimal :total_net, precision: 15, scale: 2
