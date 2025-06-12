@@ -1,10 +1,7 @@
 class DocumentsController < ApplicationController
 
   def index
-    @documents = Document.all.to_a
-    @documents.concat(Document.all.to_a)
-    @documents.concat(Document.all.to_a)
-    @documents.concat(Document.all.to_a)
+    @documents = Document.all
   end
 
   def create

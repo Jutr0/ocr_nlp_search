@@ -1,13 +1,16 @@
 import {Route, Routes} from "react-router-dom";
-import Home from "../../pages/Home";
 import {useContext} from "react";
 import {AuthContext} from "../../../contexts/AuthContext";
 import {ROLES} from "../../../utils/constants";
 import Users from "../../pages/Users";
 import Documents from "../../pages/documents/Documents";
+import UploadDocument from "../../pages/documents/UploadDocument";
+import DocumentView from "../../pages/documents/DocumentView";
 
 const routes = [
     {path: '/documents', component: <Documents/>, roles: [ROLES.USER]},
+    {path: '/documents/new', component: <UploadDocument/>, roles: [ROLES.USER]},
+    {path: '/documents/:id', component: <DocumentView/>, roles: [ROLES.USER]},
     {path: '/users', component: <Users/>, roles: [ROLES.SUPERADMIN]}
 ]
 

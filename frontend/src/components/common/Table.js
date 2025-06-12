@@ -26,13 +26,14 @@ const Table = ({
                    onRowsPerPageChange,
                    onEdit,
                    onDelete,
+                   actions = [],
                    fullHeight
                }) => {
     const paginatedRows = pagination
         ? data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
         : data;
 
-    const hasActions = onEdit || onDelete;
+    const hasActions = onEdit || onDelete || (actions && actions.length > 0);
     const effectiveColSpan = hasActions ? columns.length + 1 : columns.length;
 
     const handleActionClick = (e, action, row) => {
@@ -41,7 +42,7 @@ const Table = ({
     };
 
     return (
-        <Paper sx={{width: '100%', overflow: 'hidden', minHeight: fullHeight ? '100%' : undefined}} >
+        <Paper sx={{width: '100%', overflow: 'hidden', minHeight: fullHeight ? '100%' : undefined}}>
             <TableContainer>
                 <MUITable>
                     <TableHead>
@@ -91,6 +92,19 @@ const Table = ({
                                     {hasActions && (
                                         <TableCell align="right">
                                             <Box sx={{display: 'flex', justifyContent: 'flex-end', gap: 1}}>
+                                                {actions && actions.map((action, index) => (
+                                                    <Button
+                                                        key={index}
+                                                        size="small"
+                                                        variant={action.variant || 'outlined'}
+                                                        color={action.color || 'primary'}
+                                                        onClick={(e) => handleActionClick(e, () => action.onClick(row), row)}
+                                                        disabled={action.disabled && action.disabled(row)}
+                                                    >
+                                                        {action.label}
+                                                    </Button>
+                                                ))}
+
                                                 {onEdit && (
                                                     <Button
                                                         size="small"

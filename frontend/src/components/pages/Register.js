@@ -45,7 +45,7 @@ const Register = () => {
         }
     })
 
-    return <Box component="form" sx={{maxWidth: 400, mx: 'auto'}}>
+    return <Box component="form" sx={{maxWidth: 400, mx: 'auto', marginTop: '100px'}}>
         <FormInput name="email" label="Email" type="email" formik={formik}/>
         <FormInput name="password" label="Password" type="password" formik={formik}/>
         <FormInput name="password_confirmation" label="Password confirmation" type="password" formik={formik}/>

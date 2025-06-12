@@ -1,10 +1,9 @@
-import {Paper} from "@mui/material";
-import {useDropzone} from "react-dropzone";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import { Paper, Box, Typography } from '@mui/material';
+import { useDropzone } from 'react-dropzone';
 
-const Dropzone = ({onDrop, multiple = false}) => {
-    const {getRootProps, getInputProps, isDragActive} = useDropzone({
+const Dropzone = ({ onDrop, value, multiple = false }) => {
+
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
         accept: {
             'application/pdf': ['.pdf'],
@@ -30,11 +29,18 @@ const Dropzone = ({onDrop, multiple = false}) => {
             <input {...getInputProps()} />
             <Box>
                 <Typography variant="h6" color="textSecondary">
-                    {isDragActive ? 'Drop files here...' : 'Drag and drop files here or click to select'}
+                    {isDragActive ? 'Drop files here...' : `Drag and drop file${multiple ? 's' : ''} here or click to select`}
                 </Typography>
-                <Typography variant="body2" color="textSecondary" sx={{mt: 1}}>
+                <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
                     (Accepted files: .pdf, .jpg, .jpeg, .png)
                 </Typography>
+                {value && (
+                    <Typography variant="body2" sx={{ mt: 2, color: 'success.main' }}>
+                        {multiple
+                            ? `${value.length} file(s) selected`
+                            : `Selected file: ${value.name}`}
+                    </Typography>
+                )}
             </Box>
         </Paper>
     );

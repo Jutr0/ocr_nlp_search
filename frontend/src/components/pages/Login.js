@@ -33,7 +33,14 @@ const Login = () => {
         }
     })
 
-    return <Box component="form" sx={{maxWidth: 400, mx: 'auto'}}>
+    return <Box
+        component="form"
+        sx={{
+            maxWidth: 400,
+            mx: 'auto',
+            marginTop: '100px'
+        }}
+    >
         <FormInput name="email" label="Email" type="email" formik={formik}/>
         <FormInput name="password" label="Password" type="password" formik={formik}/>
         <Button variant="contained" fullWidth type="submit" onClick={formik.submitForm}>Login</Button>

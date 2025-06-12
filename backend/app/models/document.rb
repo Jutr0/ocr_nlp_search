@@ -34,6 +34,7 @@ class Document < ApplicationRecord
     failed:     "failed"
   }, default: :pending
 
+  validates :file, attached: true, content_type: %w[application/pdf image/png image/jpeg]
   validates :status, presence: true
   validates :currency, length: { is: 3 }, allow_blank: true
   validates :nip, length: { is: 10 }, allow_blank: true

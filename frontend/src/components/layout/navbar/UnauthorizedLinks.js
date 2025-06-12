@@ -8,13 +8,6 @@ const UnauthorizedLinks = () => {
         <Button
             color="inherit"
             component={NavLink}
-            to="/page"
-        >
-            Page
-        </Button>
-        <Button
-            color="inherit"
-            component={NavLink}
             to="/login"
         >
             Login
