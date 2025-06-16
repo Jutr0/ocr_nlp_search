@@ -8,9 +8,9 @@ class Ability
 
     if user.superadmin?
       can :manage, :all
-    else
-      can :read, User, id: user.id
-      can :update, User, id: user.id
+    elsif user.user?
+      can :manage, User, id: user.id
+      can :manage, Document, user_id: user.id
     end
   end
 end

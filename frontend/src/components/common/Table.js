@@ -119,7 +119,7 @@ const Table = ({
                                                         size="small"
                                                         variant="contained"
                                                         color="error"
-                                                        onClick={(e) => handleActionClick(e, () => onDelete(row.id), row)}
+                                                        onClick={(e) => handleActionClick(e, () => onDelete(row), row)}
                                                     >
                                                         Delete
                                                     </Button>

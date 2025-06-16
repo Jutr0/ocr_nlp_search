@@ -2,20 +2,25 @@
 #
 # Table name: documents
 #
-#  id           :uuid             not null, primary key
-#  content_type :string
-#  currency     :string(3)
-#  doc_type     :string
-#  filename     :string
-#  nip          :string(10)
-#  processed_at :datetime
-#  status       :string           default("pending"), not null
-#  text_ocr     :text
-#  total_gross  :decimal(15, 2)
-#  total_net    :decimal(15, 2)
-#  tsdoc        :tsvector
-#  created_at   :datetime         not null
-#  updated_at   :datetime         not null
+#  id             :uuid             not null, primary key
+#  category       :string
+#  company_name   :string
+#  content_type   :string
+#  currency       :string(3)
+#  doc_type       :string
+#  filename       :string
+#  gross_amount   :decimal(15, 2)
+#  invoice_number :string
+#  issue_date     :date
+#  net_amount     :decimal(15, 2)
+#  nip            :string(10)
+#  processed_at   :datetime
+#  status         :string           default("pending"), not null
+#  text_ocr       :text
+#  tsdoc          :tsvector
+#  created_at     :datetime         not null
+#  updated_at     :datetime         not null
+#  user_id        :uuid             not null
 #
 # Indexes
 #
@@ -23,20 +28,29 @@
 #  index_documents_on_doc_type    (doc_type)
 #  index_documents_on_status      (status)
 #  index_documents_on_tsdoc       (tsdoc) USING gin
+#  index_documents_on_user_id     (user_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (user_id => users.id)
 #
 class Document < ApplicationRecord
+  belongs_to :user
   has_one_attached :file
 
   enum :status, {
-    pending:    "pending",
-    processing: "processing",
-    ready:      "ready",
-    failed:     "failed"
+    pending: "pending",
+    ocr_processing: "ocr_processing",
+    ocr_failed: "ocr_failed",
+    ocr_succeeded: "ocr_succeeded",
+    nlp_processing: "nlp_processing",
+    nlp_failed: "nlp_failed",
+    to_review: "to_review",
+    failed: "failed"
   }, default: :pending
 
   validates :file, attached: true, content_type: %w[application/pdf image/png image/jpeg]
   validates :status, presence: true
-  validates :currency, length: { is: 3 }, allow_blank: true
   validates :nip, length: { is: 10 }, allow_blank: true
 
   scope :full_text, ->(q) {

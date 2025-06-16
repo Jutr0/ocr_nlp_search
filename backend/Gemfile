@@ -20,6 +20,10 @@ gem "interactor"
 gem "ostruct"
 gem "active_storage_validations"
 gem "image_processing", "~> 1.12"
+gem "activestorage"
+gem "rtesseract"
+gem "mini_magick"
+gem "pdf-reader"
 
 group :development, :test do
   gem "debug", platforms: %i[mri windows], require: "debug/prelude"

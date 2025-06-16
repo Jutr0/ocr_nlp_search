@@ -11,6 +11,11 @@ Rails.application.routes.draw do
     post '/users/create', to: 'users#create'
 
     get '/profile/me', to: 'profile#me'
-    resources :documents, only: [:create, :index]
+    resources :documents do
+      member do
+        get :refresh_ocr
+        get :refresh_nlp
+      end
+    end
   end
 end

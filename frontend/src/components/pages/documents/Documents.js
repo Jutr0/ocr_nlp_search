@@ -10,10 +10,10 @@ import Button from "../../common/Button";
 
 const columns = [
     {field: 'filename', headerName: 'Name'},
-    {field: 'created_at', headerName: 'Upload Date'},
+    {field: 'created_at', headerName: 'Upload date'},
     {field: 'doc_type', headerName: 'Type'},
     {field: 'status', headerName: 'Status'},
-    {field: 'amount', headerName: 'Amount'},
+    {field: 'gross_amount', headerName: 'Gross amount'},
 ]
 
 const Documents = () => {
@@ -32,6 +32,9 @@ const Documents = () => {
 
     const handleAdd = () => {
         navigate(`/documents/new`)
+    }
+    const handleDelete = ({id}) => {
+        actions.delete({id}).then(() => setDocuments(documents.filter(document => document.id !== id)))
     }
 
     const handleView = (document) => {
@@ -56,6 +59,7 @@ const Documents = () => {
                 columns={columns}
                 data={documents}
                 onEdit={handleEdit}
+                onDelete={handleDelete}
                 actions={tableActions}
                 fullHeight
             />

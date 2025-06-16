@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_05_06_170949) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_16_190908) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -50,8 +50,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_06_170949) do
     t.string "content_type"
     t.string "status", default: "pending", null: false
     t.string "doc_type"
-    t.decimal "total_net", precision: 15, scale: 2
-    t.decimal "total_gross", precision: 15, scale: 2
+    t.decimal "net_amount", precision: 15, scale: 2
+    t.decimal "gross_amount", precision: 15, scale: 2
     t.string "currency", limit: 3
     t.string "nip", limit: 10
     t.text "text_ocr"
@@ -59,10 +59,16 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_06_170949) do
     t.datetime "processed_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.uuid "user_id", null: false
+    t.string "category"
+    t.string "invoice_number"
+    t.date "issue_date"
+    t.string "company_name"
     t.index ["created_at"], name: "index_documents_on_created_at"
     t.index ["doc_type"], name: "index_documents_on_doc_type"
     t.index ["status"], name: "index_documents_on_status"
     t.index ["tsdoc"], name: "index_documents_on_tsdoc", using: :gin
+    t.index ["user_id"], name: "index_documents_on_user_id"
   end
 
   create_table "jwt_denylists", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -84,4 +90,5 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_06_170949) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "documents", "users"
 end

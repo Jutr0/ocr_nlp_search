@@ -1,6 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    Ascii85 (2.0.1)
     actioncable (8.0.2)
       actionpack (= 8.0.2)
       activesupport (= 8.0.2)
@@ -78,6 +79,7 @@ GEM
       securerandom (>= 0.3)
       tzinfo (~> 2.0, >= 2.0.5)
       uri (>= 0.13.1)
+    afm (0.2.2)
     annotaterb (4.14.0)
     ast (2.4.3)
     base64 (0.2.0)
@@ -136,6 +138,7 @@ GEM
     ffi (1.17.2-x86_64-linux-musl)
     globalid (1.2.1)
       activesupport (>= 6.1)
+    hashery (2.1.2)
     i18n (1.14.7)
       concurrent-ruby (~> 1.0)
     image_processing (1.14.0)
@@ -199,6 +202,12 @@ GEM
     parser (3.3.7.3)
       ast (~> 2.4.1)
       racc
+    pdf-reader (2.14.1)
+      Ascii85 (>= 1.0, < 3.0, != 2.0.0)
+      afm (~> 0.2.1)
+      hashery (~> 2.0)
+      ruby-rc4
+      ttfunk
     pg (1.5.9)
     pgvector (0.3.2)
     pp (0.6.2)
@@ -279,6 +288,7 @@ GEM
       rspec-mocks (~> 3.13)
       rspec-support (~> 3.13)
     rspec-support (3.13.2)
+    rtesseract (3.1.4)
     rubocop (1.75.0)
       json (~> 2.3)
       language_server-protocol (~> 3.17.0.2)
@@ -308,6 +318,7 @@ GEM
       rubocop-performance (>= 1.24)
       rubocop-rails (>= 2.30)
     ruby-progressbar (1.13.0)
+    ruby-rc4 (0.1.5)
     ruby-vips (2.2.4)
       ffi (~> 1.12)
       logger
@@ -326,6 +337,8 @@ GEM
     thruster (0.1.12-aarch64-linux)
     thruster (0.1.12-x86_64-linux)
     timeout (0.4.3)
+    ttfunk (1.8.0)
+      bigdecimal (~> 3.1)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     unicode-display_width (3.1.4)
@@ -358,6 +371,7 @@ PLATFORMS
 
 DEPENDENCIES
   active_storage_validations
+  activestorage
   annotaterb
   bootsnap
   brakeman
@@ -370,13 +384,16 @@ DEPENDENCIES
   image_processing (~> 1.12)
   interactor
   jbuilder
+  mini_magick
   ostruct
+  pdf-reader
   pg (~> 1.5)
   pgvector (~> 0.3)
   puma (>= 5.0)
   rack-cors
   rails (~> 8.0.1)
   rspec-rails
+  rtesseract
   rubocop-rails-omakase
   shoulda-matchers
   sidekiq
@@ -387,4 +404,4 @@ RUBY VERSION
    ruby 3.4.2p28
 
 BUNDLED WITH
-   2.6.2
+   2.6.9

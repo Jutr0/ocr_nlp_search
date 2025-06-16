@@ -1,14 +1,30 @@
 class DocumentsController < ApplicationController
+  include ActiveStorage::SetCurrent
+  load_and_authorize_resource
 
   def index
-    @documents = Document.all
+  end
+
+  def show
+  end
+
+  def destroy
+    @document.destroy!
   end
 
   def create
-    result = CreateDocument.call!(file: document_params[:file])
+    result = CreateDocument.call!(**@document.attributes, file: document_params[:file])
 
     @document = result.document
     render json: { id: @document.id, status: @document.status }, status: :created
+  end
+
+  def refresh_ocr
+    OcrJob.perform_now(@document.id)
+  end
+
+  def refresh_nlp
+    NlpJob.perform_later(@document.id)
   end
 
   private
