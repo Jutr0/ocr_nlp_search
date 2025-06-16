@@ -20,7 +20,7 @@ class DocumentsController < ApplicationController
   end
 
   def refresh_ocr
-    OcrJob.perform_now(@document.id)
+    OcrJob.perform_later(@document.id)
   end
 
   def refresh_nlp

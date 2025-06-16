@@ -22,7 +22,7 @@ class OcrJob < ApplicationJob
     NlpJob.perform_later(document.id)
   rescue => e
     Rails.logger.error "[OCRJob] Error on Document #{document_id}: #{e.message}"
-    document.update!(status: Document.statuses[:ocr_failed]) if document
+    document.update!(status: Document.statuses[:ocr_retrying]) if document
     raise e
   end
 

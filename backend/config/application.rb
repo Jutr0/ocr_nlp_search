@@ -26,6 +26,7 @@ module Backend
 
     config.frontend_url = ENV.fetch('FRONTEND_URL', 'http://localhost:3000')
     config.backend_url = ENV.fetch("BACKEND_URL", 'http://localhost:4000')
+    config.open_ai_api_key = ENV.fetch("OPEN_AI_API_KEY", '')
     config.active_job.queue_adapter = :sidekiq
 
     Rails.application.routes.default_url_options[:host] = config.backend_url

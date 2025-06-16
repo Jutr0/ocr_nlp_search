@@ -1,5 +1,6 @@
 require 'net/http'
 require 'json'
+require 'openai'
 
 class NlpJob < ApplicationJob
   queue_as :default
@@ -26,48 +27,51 @@ class NlpJob < ApplicationJob
     )
   rescue => e
     Rails.logger.error "[NlpJob] Error for Document #{document_id}: #{e.message}"
-    document.update!(status: Document.statuses[:nlp_failed]) if document
+    document.update!(status: Document.statuses[:nlp_retrying]) if document
     raise e
   end
 
   private
 
   def analyze_with_llm(ocr_text)
-    uri = URI("http://localhost:11434/api/generate")
-    req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
-    req.body = {
-      model: "llama3",
-      stream: false,
-      prompt: <<~PROMPT
-                You are a JSON extraction engine for financial documents.
+    client = OpenAI::Client.new(access_token: Rails.configuration.open_ai_api_key)
 
-        Given the OCR text of a scanned document, extract ONLY the following flat JSON object, using EXACT keys and no nesting:
-
-        {
-          "document_type": "invoice",            // one of: "invoice", "bill", "receipt", "other"
-          "category": "IT services",             // free text but required! example: "Bills", "Utilities", "Food", "Travel", "Healthcare", "Other"
-          "invoice_number": "FV-123/2024",
-          "issue_date": "2024-04-12",            // YYYY-MM-DD
-          "net_amount": 123.45,
-          "gross_amount": 151.84,
-          "currency": "PLN",                     // one of: [ "PLN", "EUR", "USD", ...]
-          "nip": "1234567890",                   // optional but in strict schema: (just 10 numbers without dashes or spaces)
-          "company_name": "Acme Sp. z o.o."
-        }
-
-        Output must be ONLY valid JSON with the specified fields.  
-        Do not wrap in markdown, do not include explanations, headers, or comments.
-        Remember to start with { and end with }
+    res = client.chat(
+      parameters: {
+        model: "gpt-3.5-turbo",
+        temperature: 0,
+        messages: [
+          {
+            role: "system",
+            content: "You are a financial document parser. Extract structured data from messy OCR text and return valid JSON."
+          },
+          {
+            role: "user",
+            content: <<~TEXT
               OCR TEXT:
               \"\"\"
-              #{truncate_ocr_text(ocr_text)}
+              #{ocr_text}
               \"\"\"
-      PROMPT
-    }.to_json
-    puts req.body
-    res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
-    body = JSON.parse(res.body)
-    body["response"]
+
+              Return this JSON format (no explanations!):
+
+              {
+                "document_type": "invoice", // one of: invoice, bill, receipt, other
+                "category": "it_services", // one of: it_services, office_supplies, travel_&_transportation, marketing_&_advertising, legal_&_accounting, utilities_&_subscriptions, other
+                "invoice_number": "...",
+                "issue_date": "YYYY-MM-DD",
+                "net_amount": ...,
+                "gross_amount": ...,
+                "currency": "PLN", //currency in 3 letters
+                "nip": "...", //must be 10 digits (no dashes)
+                "company_name": "..."
+              }
+            TEXT
+          }
+        ]
+      }).to_json
+    puts res
+    JSON.parse(res).dig("choices", 0, "message", "content")
   end
 
   def extract_decimal(val)

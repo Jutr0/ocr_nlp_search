@@ -41,10 +41,10 @@ class Document < ApplicationRecord
   enum :status, {
     pending: "pending",
     ocr_processing: "ocr_processing",
-    ocr_failed: "ocr_failed",
+    ocr_retrying: "ocr_retrying",
     ocr_succeeded: "ocr_succeeded",
     nlp_processing: "nlp_processing",
-    nlp_failed: "nlp_failed",
+    nlp_retrying: "nlp_retrying",
     to_review: "to_review",
     failed: "failed"
   }, default: :pending

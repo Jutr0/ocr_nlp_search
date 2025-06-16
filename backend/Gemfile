@@ -24,6 +24,7 @@ gem "activestorage"
 gem "rtesseract"
 gem "mini_magick"
 gem "pdf-reader"
+gem 'ruby-openai'
 
 group :development, :test do
   gem "debug", platforms: %i[mri windows], require: "debug/prelude"
