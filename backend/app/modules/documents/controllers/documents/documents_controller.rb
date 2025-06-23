@@ -1,4 +1,4 @@
-class DocumentsController < ApplicationController
+class Documents::DocumentsController < ApplicationController
   include ActiveStorage::SetCurrent
   load_and_authorize_resource
 

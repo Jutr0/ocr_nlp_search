@@ -41,8 +41,11 @@ module Backend
                        request_specs: true
     end
     config.api_only = true
-    config.autoload_paths += %W(
-          #{config.root}/app/services
-        )
+    
+    config.autoload_paths += Dir[Rails.root.join('app/modules/**/models')]
+    config.autoload_paths += Dir[Rails.root.join('app/modules/**/controllers')]
+    config.autoload_paths += Dir[Rails.root.join('app/modules/**/services')]
+    config.autoload_paths += Dir[Rails.root.join('app/modules/**/jobs')]
+    config.autoload_paths += Dir[Rails.root.join('app/modules/**/views')]
   end
 end
