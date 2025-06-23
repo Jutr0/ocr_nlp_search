@@ -50,7 +50,7 @@ const DocumentView = () => {
                     </Paper>
                 </Box>
 
-                <Box flex={1} display="flex" flexDirection="column" gap={2}>
+                <Box flex={1} display="flex" flexDirection="column" gap={2} maxWidth='50%'>
                     <Paper elevation={2} sx={{p: 2}}>
                         <Typography variant="h6" gutterBottom>
                             Extracted Data
@@ -79,7 +79,7 @@ const DocumentView = () => {
                             OCR Output
                         </Typography>
                         <Typography variant="body" gutterBottom>
-                            <pre>{document.text_ocr}</pre>
+                            {document.text_ocr}
                         </Typography>
                     </Paper>
 
