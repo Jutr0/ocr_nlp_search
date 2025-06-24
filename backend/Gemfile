@@ -36,3 +36,5 @@ group :development, :test do
 end
 
 gem "tzinfo-data", platforms: %i[windows jruby]
+
+gem "karafka", "~> 2.5"

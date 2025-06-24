@@ -33,32 +33,34 @@
 # Foreign Keys
 #
 #  fk_rails_...  (user_id => users.id)
-#
-class Document < ApplicationRecord
-  belongs_to :user
-  has_one_attached :file
 
-  enum :status, {
-    pending: "pending",
-    ocr_processing: "ocr_processing",
-    ocr_retrying: "ocr_retrying",
-    ocr_succeeded: "ocr_succeeded",
-    nlp_processing: "nlp_processing",
-    nlp_retrying: "nlp_retrying",
-    to_review: "to_review",
-    failed: "failed"
-  }, default: :pending
+module Documents
+  class Document < ApplicationRecord
+    belongs_to :user
+    has_one_attached :file
 
-  validates :file, attached: true, content_type: %w[application/pdf image/png image/jpeg]
-  validates :status, presence: true
-  validates :nip, length: { is: 10 }, allow_blank: true
+    enum :status, {
+      pending: "pending",
+      ocr_processing: "ocr_processing",
+      ocr_retrying: "ocr_retrying",
+      ocr_succeeded: "ocr_succeeded",
+      nlp_processing: "nlp_processing",
+      nlp_retrying: "nlp_retrying",
+      to_review: "to_review",
+      failed: "failed"
+    }, default: :pending
 
-  scope :full_text, ->(q) {
-    return all if q.blank?
+    validates :file, attached: true, content_type: %w[application/pdf image/png image/jpeg]
+    validates :status, presence: true
+    validates :nip, length: { is: 10 }, allow_blank: true
 
-    sanitized = sanitize_sql_like(q)
-    where("tsdoc @@ plainto_tsquery(?)", sanitized)
-      .order(Arel.sql("ts_rank(tsdoc, plainto_tsquery('#{sanitized}')) DESC"))
-  }
+    scope :full_text, ->(q) {
+      return all if q.blank?
 
+      sanitized = sanitize_sql_like(q)
+      where("tsdoc @@ plainto_tsquery(?)", sanitized)
+        .order(Arel.sql("ts_rank(tsdoc, plainto_tsquery('#{sanitized}')) DESC"))
+    }
+
+  end
 end

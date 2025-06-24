@@ -5,9 +5,8 @@ require 'pdf/reader'
 class OcrJob < ApplicationJob
   queue_as :default
 
-  def perform(document_id)
-    document = Document.find(document_id)
-    return unless document.file.attached?
+  def perform(document)
+    return unless document.file_url.present?
 
     file_path = ActiveStorage::Blob.service.send(:path_for, document.file.key)
 
