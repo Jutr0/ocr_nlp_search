@@ -6,22 +6,29 @@ class OcrJob < ApplicationJob
   queue_as :default
 
   def perform(document)
-    return unless document.file_url.present?
+    document = StructUtils.deep_ostruct(document)
+    return unless document&.file_url.present?
+    tempfile = Tempfile.new(['doc', File.extname(document.filename)])
+    tempfile.binmode
+    tempfile.write URI.open(document.file_url).read
+    tempfile.rewind
+    file_path = tempfile.path
 
-    file_path = ActiveStorage::Blob.service.send(:path_for, document.file.key)
+    Processing::OcrStartedEvent.call(document)
 
-    document.update!(status: Document.statuses[:ocr_processing])
-    extracted_text = if document.file.content_type == 'application/pdf'
+    extracted_text = if document.content_type == 'application/pdf'
                        extract_text_from_pdf(file_path)
                      else
                        extract_text_from_image(file_path)
                      end
+    document.text_ocr = extracted_text.strip
 
-    document.update!(text_ocr: extracted_text.strip, status: Document.statuses[:ocr_succeeded])
-    NlpJob.perform_later(document.id)
+    Processing::OcrSucceededEvent.call(document)
+
+    NlpJob.perform_later(document.slice(:text_ocr, :document_id))
   rescue => e
-    Rails.logger.error "[OCRJob] Error on Document #{document_id}: #{e.message}"
-    document.update!(status: Document.statuses[:ocr_retrying]) if document
+    Rails.logger.error "[OCRJob] Error on Document #{document.document_id}: #{e.message}"
+    Processing::OcrFailedEvent.call(document, e.message)
     raise e
   end
 

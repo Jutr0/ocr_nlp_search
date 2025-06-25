@@ -47,5 +47,7 @@ module Backend
     config.autoload_paths += Dir[Rails.root.join('app/modules/**/services')]
     config.autoload_paths += Dir[Rails.root.join('app/modules/**/jobs')]
     config.autoload_paths += Dir[Rails.root.join('app/modules/**/views')]
+    config.autoload_paths += Dir[Rails.root.join('app/modules/**/consumers')]
+    config.autoload_paths += Dir[Rails.root.join('app/modules/**/events')]
   end
 end

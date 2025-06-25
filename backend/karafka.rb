@@ -17,7 +17,10 @@ class KarafkaApp < Karafka::App
 
   routes.draw do
     topic :documents_stream do
-      consumer Processing::DocumentCreatedConsumer
+      consumer Processing::DocumentsConsumer
+    end
+    topic :processing_stream do
+      consumer Documents::OcrEventConsumer
     end
   end
 end

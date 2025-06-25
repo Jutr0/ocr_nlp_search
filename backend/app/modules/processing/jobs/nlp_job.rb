@@ -5,29 +5,30 @@ require 'openai'
 class NlpJob < ApplicationJob
   queue_as :default
 
-  def perform(document_id)
-    document = Document.find(document_id)
-    return unless document.text_ocr.present?
-    document.update!(status: Document.statuses[:nlp_processing])
+  def perform(document)
+    
+    document = StructUtils.deep_ostruct(document)
+    return unless document&.text_ocr.present?
+    # document.update!(status: Document.statuses[:nlp_processing])
     result = analyze_with_llm(document.text_ocr)
-    puts result
+
     parsed = extract_json_from_response(result)
 
-    document.update!(
-      doc_type: parsed["document_type"],
-      net_amount: extract_decimal(parsed["net_amount"]),
-      gross_amount: extract_decimal(parsed["gross_amount"]),
-      currency: parsed["currency"],
-      category: parsed["category"],
-      invoice_number: parsed["invoice_number"],
-      issue_date: parsed["issue_date"],
-      company_name: parsed["company_name"],
-      nip: parsed["nip"],
-      status: Document.statuses[:to_review]
-    )
+    # document.update!(
+    #   doc_type: parsed["document_type"],
+    #   net_amount: extract_decimal(parsed["net_amount"]),
+    #   gross_amount: extract_decimal(parsed["gross_amount"]),
+    #   currency: parsed["currency"],
+    #   category: parsed["category"],
+    #   invoice_number: parsed["invoice_number"],
+    #   issue_date: parsed["issue_date"],
+    #   company_name: parsed["company_name"],
+    #   nip: parsed["nip"],
+    #   status: Document.statuses[:to_review]
+    # )
   rescue => e
-    Rails.logger.error "[NlpJob] Error for Document #{document_id}: #{e.message}"
-    document.update!(status: Document.statuses[:nlp_retrying]) if document
+    Rails.logger.error "[NlpJob] Error for Document #{document.document_id}: #{e.message}"
+    # document.update!(status: Document.statuses[:nlp_retrying])
     raise e
   end
 

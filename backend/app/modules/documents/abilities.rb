@@ -1,7 +1,9 @@
-  module Documents::Abilities
+module Documents
+  module Abilities
     def self.define(ability, user)
       if user.user?
         ability.can :manage, Document, user_id: user.id
       end
     end
+  end
 end

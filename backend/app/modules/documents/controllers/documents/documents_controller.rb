@@ -21,7 +21,7 @@ module Documents
     end
 
     def refresh_ocr
-      OcrJob.perform_later(@document.id)
+      DocumentOcrRefreshEvent.call(@document)
     end
 
     def refresh_nlp
