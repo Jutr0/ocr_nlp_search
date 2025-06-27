@@ -14,7 +14,7 @@ module Documents
     end
 
     def create
-      result = Documents::CreateDocument.call!(**@document.attributes, file: document_params[:file])
+      result = CreateDocument.call!(**@document.attributes, file: document_params[:file])
 
       @document = result.document
       render json: { id: @document.id, status: @document.status }, status: :created
@@ -25,7 +25,7 @@ module Documents
     end
 
     def refresh_nlp
-      NlpJob.perform_later(@document.id)
+      DocumentNlpRefreshEvent.call(@document)
     end
 
     private

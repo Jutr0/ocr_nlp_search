@@ -52,7 +52,6 @@ module Documents
 
     validates :file, attached: true, content_type: %w[application/pdf image/png image/jpeg]
     validates :status, presence: true
-    validates :nip, length: { is: 10 }, allow_blank: true
 
     scope :full_text, ->(q) {
       return all if q.blank?

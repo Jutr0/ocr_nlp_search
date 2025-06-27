@@ -20,7 +20,7 @@ class KarafkaApp < Karafka::App
       consumer Processing::DocumentsConsumer
     end
     topic :processing_stream do
-      consumer Documents::OcrEventConsumer
+      consumer Documents::ProcessingEventConsumer
     end
   end
 end
