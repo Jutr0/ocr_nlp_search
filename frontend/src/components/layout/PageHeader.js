@@ -61,7 +61,7 @@ const PageHeader = ({icon, tabs, onTabChange, activeTab, buttons, breadcrumbs = 
                 textColor="primary"
                 indicatorColor="primary"
             >
-                {tabs.map(tab => <Tab label={tab.label} className="tab" value={tab.label}/>)}
+                {tabs.map(tab => <Tab label={tab.label} className="tab" value={tab.value}/>)}
             </Tabs>}
             <Box className='buttons'>
                 {buttons && buttons}

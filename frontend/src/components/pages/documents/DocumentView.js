@@ -25,7 +25,7 @@ const DocumentView = () => {
 
     return <Box>
         <PageHeader icon={<DescriptionIcon color="primary"/>}
-                    breadcrumbs={[{label: "Documents", path: "/documents"}, {label: "View"}]}
+                    breadcrumbs={[{label: "Documents", path: "/documents/all"}, {label: "View"}]}
                     buttons={<>
                         <Button onClick={actions.refreshOcr} variant='contained'>Refresh OCR</Button>
                         <Button onClick={actions.refreshNlp} variant='contained'>Refresh NLP</Button></>}

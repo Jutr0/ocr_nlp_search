@@ -11,6 +11,9 @@ Rails.application.routes.draw do
     get '/profile/me', to: 'users/profile#me'
 
       resources :documents, controller: 'documents/documents' do
+        collection do
+          get :to_review
+        end
         member do
           get :refresh_ocr
           get :refresh_nlp

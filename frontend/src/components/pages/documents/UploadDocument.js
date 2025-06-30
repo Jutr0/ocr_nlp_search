@@ -19,7 +19,7 @@ const navigate = useNavigate();
             formData.append("file", values.file, values.filename);
         }
 
-        actions.createDocument(formData).then(({id}) => navigate(`/documents/${id}`));
+        actions.createDocument(formData).then(({id}) => navigate(`/documents/view/${id}`));
     };
 
     const formik = useFormik({
@@ -44,7 +44,7 @@ const navigate = useNavigate();
 
     return <Box>
         <PageHeader icon={<DescriptionIcon color="primary"/>}
-                    breadcrumbs={[{label: "Documents", path: "/documents"}, {label: "New"}]}
+                    breadcrumbs={[{label: "Documents", path: "/documents/all"}, {label: "New"}]}
                     buttons={<Button variant='contained' size="small" onClick={formik.handleSubmit}>Save &
                         Process</Button>}
         />

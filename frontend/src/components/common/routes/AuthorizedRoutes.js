@@ -8,9 +8,9 @@ import UploadDocument from "../../pages/documents/UploadDocument";
 import DocumentView from "../../pages/documents/DocumentView";
 
 const routes = [
-    {path: '/documents', component: <Documents/>, roles: [ROLES.USER]},
     {path: '/documents/new', component: <UploadDocument/>, roles: [ROLES.USER]},
-    {path: '/documents/:id', component: <DocumentView/>, roles: [ROLES.USER]},
+    {path: '/documents/view/:id', component: <DocumentView/>, roles: [ROLES.USER]},
+    {path: '/documents/:tab', component: <Documents/>, roles: [ROLES.USER]},
     {path: '/users', component: <Users/>, roles: [ROLES.SUPERADMIN]}
 ]
 

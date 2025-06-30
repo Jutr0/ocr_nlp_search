@@ -28,6 +28,10 @@ module Documents
       DocumentNlpRefreshEvent.call(@document)
     end
 
+    def to_review
+      @documents.to_review
+    end
+
     private
 
     def document_params

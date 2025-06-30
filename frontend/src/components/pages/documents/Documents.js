@@ -7,7 +7,7 @@ import {useNavigate} from "react-router-dom";
 import {buildActions} from "../../../utils/actionsBuilder";
 import PageBody from "../../layout/PageBody";
 import Button from "../../common/Button";
-
+import DocumentsToReview from './DocumentsToReview.js';
 const columns = [
     {field: 'filename', headerName: 'Name'},
     {field: 'created_at', headerName: 'Upload date'},
@@ -17,7 +17,7 @@ const columns = [
 ]
 
 const Documents = () => {
-    const [tab, setTab] = useState("All");
+    const [tab, setTab] = useState("all");
     const [documents, setDocuments] = useState([]);
     const navigate = useNavigate();
     const actions = buildActions("document")
@@ -27,7 +27,7 @@ const Documents = () => {
     }, []);
 
     const handleEdit = (document) => {
-        navigate(`/documents/${document.id}/edit`)
+        navigate(`/documents/edit/${document.id}`)
     }
 
     const handleAdd = () => {
@@ -38,7 +38,7 @@ const Documents = () => {
     }
 
     const handleView = (document) => {
-        navigate(`/documents/${document.id}`)
+        navigate(`/documents/view/${document.id}`)
     }
 
     const tableActions = [
@@ -49,20 +49,27 @@ const Documents = () => {
             onClick: handleView
         }
     ];
+
+    const handleTabChange = (tab) => {
+        navigate(`/documents/${tab}`)
+        setTab(tab)
+    }
+
     return <Box>
         <PageHeader icon={<DescriptionIcon color="primary"/>} breadcrumbs={[{label: "Documents"}]}
-                    tabs={[{label: "All"}, {label: "To review"}]} onTabChange={setTab} activeTab={tab}
+                    tabs={[{label: "All", value: "all"}, {label: "To review", value: "to-review"}]} onTabChange={handleTabChange} activeTab={tab}
                     buttons={<Button variant='outlined' size='small' onClick={handleAdd}>+ Add document</Button>}
         />
         <PageBody withPadding={false}>
-            <Table
+            {tab === "all" && <Table
                 columns={columns}
                 data={documents}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 actions={tableActions}
                 fullHeight
-            />
+            />}
+            {tab === "to-review" && <DocumentsToReview />}
         </PageBody>
     </Box>
 
