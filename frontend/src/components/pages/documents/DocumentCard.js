@@ -2,11 +2,38 @@ import React from 'react';
 import {Box, Button, Paper, Stack, Typography} from '@mui/material';
 
 const DocumentCard = ({document}) => {
+    const isImage = (type) => type?.startsWith('image/');
+
     return (
         <Paper elevation={3} sx={{p: 3, maxWidth: 350, mx: 'auto'}}>
-            <Typography variant="subtitle2">{document.filename}</Typography>
+            <Typography variant="subtitle2">{document.file.filename}</Typography>
             <Box sx={{my: 2, borderBottom: '1px solid #ccc', pb: 2}}>
-                <Box sx={{height: 200, backgroundColor: '#f5f5f5'}}/>
+                <Box
+                    sx={{
+                        height: 200,
+                        backgroundColor: '#f5f5f5',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                    }}
+                >
+                    {isImage(document.file.type) ? (
+                        <img
+                            src={document.file.url}
+                            alt="Preview"
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                            }}
+                        />
+                    ) : (
+                        <Typography variant="caption" color="textSecondary">
+                            No preview available
+                        </Typography>
+                    )}
+                </Box>
             </Box>
             <Box sx={{mb: 3}}>
                 <Typography variant="subtitle1" fontWeight="bold">Extracted data:</Typography>
