@@ -1,10 +1,14 @@
 import React from 'react';
-import {Box, Button, Paper, Stack, Typography} from '@mui/material';
+import {Box, Paper, Stack, Typography} from '@mui/material';
+import DocumentPreviewModal from "./DocumentPreviewModal";
+import Button from "../../common/Button";
 
-const DocumentCard = ({document}) => {
+const DocumentCard = ({document, onReject, onApprove}) => {
     const isImage = (type) => type?.startsWith('image/');
+    const [modalOpen, setModalOpen] = React.useState(null);
 
-    return (
+
+    return <>
         <Paper elevation={3} sx={{p: 3, maxWidth: 350, mx: 'auto'}}>
             <Typography variant="subtitle2">{document.file.filename}</Typography>
             <Box sx={{my: 2, borderBottom: '1px solid #ccc', pb: 2}}>
@@ -43,13 +47,20 @@ const DocumentCard = ({document}) => {
                 <Typography>Net amount: {document.net_amount}</Typography>
             </Box>
             <Stack direction="row" spacing={1} justifyContent="space-between">
-                <Button variant="outlined" color="primary" size="small">Preview</Button>
+                <Button variant="outlined" color="primary" size="small"
+                        onClick={() => setModalOpen('preview')}>View</Button>
                 <Button variant="outlined" color="secondary" size="small">Edit</Button>
-                <Button variant="contained" color="success" size="small">Approve</Button>
-                <Button variant="contained" color="error" size="small">Reject</Button>
+                <Button variant="contained" color="success" size="small"
+                        onClick={() => onApprove(document.id)}>Approve</Button>
+                <Button variant="contained" color="error" size="small"
+                        onClick={() => onReject(document.id)}>Reject</Button>
             </Stack>
         </Paper>
-    );
+        {modalOpen === "preview" &&
+            <DocumentPreviewModal document={document} onClose={() => setModalOpen(null)} onApprove={onApprove}
+                                  onReject={onReject}/>}
+    </>
+
 };
 
 export default DocumentCard;

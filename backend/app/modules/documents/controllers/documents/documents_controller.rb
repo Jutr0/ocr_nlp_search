@@ -29,7 +29,15 @@ module Documents
     end
 
     def to_review
-      @documents.to_review
+      @documents = @documents.to_review
+    end
+
+    def approve
+      ApproveDocument.call!(document: @document)
+    end
+
+    def reject
+      RejectDocument.call!(document: @document)
     end
 
     private

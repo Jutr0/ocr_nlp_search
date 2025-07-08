@@ -17,6 +17,8 @@ Rails.application.routes.draw do
         member do
           get :refresh_ocr
           get :refresh_nlp
+          post :approve
+          post :reject
         end
       end
   end

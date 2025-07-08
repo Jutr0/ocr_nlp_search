@@ -38,6 +38,7 @@ module Documents
   class Document < ApplicationRecord
     belongs_to :user
     has_one_attached :file
+    before_validation :truncate_nip_to_10_chars
 
     enum :status, {
       pending: "pending",
@@ -47,6 +48,7 @@ module Documents
       nlp_processing: "nlp_processing",
       nlp_retrying: "nlp_retrying",
       to_review: "to_review",
+      approved: "approved",
       failed: "failed"
     }, default: :pending
 
@@ -61,5 +63,10 @@ module Documents
         .order(Arel.sql("ts_rank(tsdoc, plainto_tsquery('#{sanitized}')) DESC"))
     }
 
+    private
+
+    def truncate_nip_to_10_chars
+      self.nip = nip.to_s[0, 10] if nip.present?
+    end
   end
 end
