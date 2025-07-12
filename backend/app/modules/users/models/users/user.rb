@@ -13,7 +13,6 @@
 #
 #  index_users_on_email  (email) UNIQUE
 module Users
-
   class User < ApplicationRecord
     devise :database_authenticatable,
            :registerable,

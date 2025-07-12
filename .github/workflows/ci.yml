@@ -21,7 +21,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:15
+        image: supabase/postgres:15.4.0
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
@@ -51,7 +51,6 @@ jobs:
         run: |
           cp config/database.yml.ci config/database.yml
           bundle exec rails db:create db:schema:load
-          bundle exec rails db:prepare
 
       - name: Run specs
         run: bundle exec rspec
