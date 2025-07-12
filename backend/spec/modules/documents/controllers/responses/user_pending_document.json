@@ -1,0 +1,20 @@
+{
+  "id": "HIDDEN",
+  "filename": null,
+  "status": "pending",
+  "text_ocr": null,
+  "category": null,
+  "issue_date": null,
+  "invoice_number": null,
+  "doc_type": null,
+  "company_name": null,
+  "net_amount": null,
+  "gross_amount": null,
+  "nip": null,
+  "currency": null,
+  "file": {
+    "url": "HIDDEN",
+    "filename": null,
+    "type": "application/pdf"
+  }
+}

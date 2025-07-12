@@ -36,7 +36,7 @@
 
 module Documents
   class Document < ApplicationRecord
-    belongs_to :user
+    belongs_to :user, class_name: "Users::User"
     has_one_attached :file
     before_validation :truncate_nip_to_10_chars
 

@@ -12,14 +12,15 @@
 # Indexes
 #
 #  index_users_on_email  (email) UNIQUE
-#
-class User < ApplicationRecord
-  devise :database_authenticatable,
-         :registerable,
-         :validatable,
-         :jwt_authenticatable,
-         jwt_revocation_strategy: JwtDenylist
+module Users
+  class User < ApplicationRecord
+    devise :database_authenticatable,
+           :registerable,
+           :validatable,
+           :jwt_authenticatable,
+           jwt_revocation_strategy: JwtDenylist
 
-  enum :role, { user: 'user', superadmin: 'superadmin', guest: 'guest' }, default: :user
+    enum :role, { user: 'user', superadmin: 'superadmin', guest: 'guest' }, default: :user
 
+  end
 end

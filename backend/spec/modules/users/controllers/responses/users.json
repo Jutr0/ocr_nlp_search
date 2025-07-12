@@ -1,0 +1,17 @@
+[
+  {
+    "id": "HIDDEN",
+    "email": "superadmin@example.com",
+    "role": "superadmin"
+  },
+  {
+    "id": "HIDDEN",
+    "email": "user@example.com",
+    "role": "user"
+  },
+  {
+    "id": "HIDDEN",
+    "email": "another@example.com",
+    "role": "user"
+  }
+]
