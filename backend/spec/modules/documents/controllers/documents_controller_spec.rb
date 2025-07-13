@@ -111,7 +111,7 @@ module Documents
         expect {
           delete :destroy, params: { id: pending_document.id }, format: :json
         }.to change(Document, :count).by(-1)
-
+        puts response.body
         expect(response).to have_http_status(:no_content)
       end
 
@@ -120,7 +120,7 @@ module Documents
         expect {
           delete :destroy, params: { id: pending_document.id }, format: :json
         }.to change(Document, :count).by(-1)
-
+        puts response.body
         expect(response).to have_http_status(:no_content)
       end
     end

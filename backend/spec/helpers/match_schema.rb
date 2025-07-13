@@ -1,10 +1,11 @@
 require 'json'
 require 'fileutils'
 
+RED = "\e[31m"
+GREEN = "\e[32m"
+RESET = "\e[0m"
+
 RSpec::Matchers.define :match_schema do |schema_name|
-  RED = "\e[31m"
-  GREEN = "\e[32m"
-  RESET = "\e[0m"
 
   match do |actual_body|
     schema_path = get_spec_response_path(schema_name)
