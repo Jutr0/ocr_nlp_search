@@ -7,6 +7,7 @@ class ApplicationController < ActionController::API
   rescue_from ActiveRecord::RecordNotFound, with: :handle_not_found_exception
   rescue_from ActiveRecord::RecordInvalid, with: :handle_validation_exception
   rescue_from CanCan::AccessDenied, with: :handle_access_denied_exception
+  rescue_from Interactor::Failure, with: :handle_interactor_exception
 
   private
 
@@ -27,10 +28,17 @@ class ApplicationController < ActionController::API
 
     render json: { message: "Validation failed" }, status: :unprocessable_entity
   end
+
   def handle_access_denied_exception(exception)
     log_error(exception)
 
     render json: { message: "Not authorized" }, status: :unauthorized
+  end
+
+  def handle_interactor_exception(exception)
+    log_error(OpenStruct.new({ class: exception.class, backtrace: exception.backtrace, message: exception.context.error[:message] }))
+
+    render json: { message: exception.context.error[:message] }, status: exception.context.error[:status]
   end
 
   def log_error(exception)

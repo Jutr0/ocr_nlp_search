@@ -81,9 +81,6 @@ module Documents
     end
 
     describe 'POST #create' do
-      before do
-        allow(DocumentCreatedEvent).to receive(:call).and_return(nil)
-      end
       include_examples 'an user-only endpoint',
                        :post,
                        :create,
@@ -99,6 +96,15 @@ module Documents
         expect(response).to have_http_status(:created)
         json = JSON.parse(response.body)
         expect(json['status']).to eq('pending')
+      end
+      it 'publish document created event' do
+        sign_in user
+
+        post :create, params: { file: file }, format: :json
+
+        expect(@topic).to eq(:documents_stream)
+        expect(@event).to eq('documents.created')
+        expect(@data.to_json).to match_schema('document_created_event_payload')
       end
 
       it 'renders the expected fields for created document' do
@@ -250,6 +256,7 @@ module Documents
         post :approve, params: { id: pending_document.id }, format: :json
 
         expect(response).to have_http_status(:unprocessable_entity)
+        expect(JSON.parse(response.body)["message"]).to eq("Document must be in to_review state to be approved")
         expect(pending_document.reload).not_to be_approved
       end
 
@@ -272,7 +279,7 @@ module Documents
         post :reject, params: { id: to_review_document.id }, format: :json
 
         expect(response).to have_http_status(:ok)
-        expect(to_review_document.reload).to be_failed
+        expect(to_review_document.reload).to be_ocr_retrying
       end
 
       it 'returns 422 Unprocessable Entity if document is not to_review' do
@@ -280,7 +287,8 @@ module Documents
         post :reject, params: { id: pending_document.id }, format: :json
 
         expect(response).to have_http_status(:unprocessable_entity)
-        expect(pending_document.reload).not_to be_failed
+        expect(JSON.parse(response.body)["message"]).to eq("Document must be in to_review state to be rejected")
+        expect(pending_document.reload).not_to be_ocr_retrying
       end
 
       it "returns 401 Unauthorized when user is not document's owner" do

@@ -2,7 +2,7 @@ module Documents
   class DocumentsController < ApplicationController
     include ActiveStorage::SetCurrent
     load_and_authorize_resource
-    before_action :check_to_review_status, only: [:approve, :reject]
+
     def index
     end
 
@@ -49,13 +49,6 @@ module Documents
 
     def document_params
       params.permit(:file)
-    end
-
-    def check_to_review_status
-      unless @document.to_review?
-        @document.errors.add(:status, "must be in to_review state")
-        raise ActiveRecord::RecordInvalid.new(@document)
-      end
     end
 
   end

@@ -48,12 +48,12 @@ module Documents
       nlp_processing: "nlp_processing",
       nlp_retrying: "nlp_retrying",
       to_review: "to_review",
-      approved: "approved",
-      failed: "failed"
+      approved: "approved"
     }, default: :pending
 
     validates :file, attached: true, content_type: %w[application/pdf image/png image/jpeg]
     validates :status, presence: true
+    validate :only_to_review_can_be_approved, if: :will_save_change_to_status?
 
     scope :full_text, ->(q) {
       return all if q.blank?
@@ -67,6 +67,15 @@ module Documents
 
     def truncate_nip_to_10_chars
       self.nip = nip.to_s[0, 10] if nip.present?
+    end
+
+    def only_to_review_can_be_approved
+      if self.id.present? && self.approved? && self.status_was != "to_review"
+        errors.add(
+          :status,
+          "can only be changed to approved when it is in the to_review state"
+        )
+      end
     end
   end
 end

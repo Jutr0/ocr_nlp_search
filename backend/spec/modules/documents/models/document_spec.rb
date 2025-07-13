@@ -22,8 +22,7 @@ module Documents
             nlp_processing: 'nlp_processing',
             nlp_retrying: 'nlp_retrying',
             to_review: 'to_review',
-            approved: 'approved',
-            failed: 'failed'
+            approved: 'approved'
           ).
           backed_by_column_of_type(:string).
           with_default(:pending)
