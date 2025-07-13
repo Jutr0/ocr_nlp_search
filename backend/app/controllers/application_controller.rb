@@ -13,7 +13,7 @@ class ApplicationController < ActionController::API
   def handle_exception(exception)
     log_error(exception)
 
-    render json: { message: "Internal server exception" }, status: :internal_server_error
+    render json: { message: "#{exception.class}: #{exception.message}" }, status: :internal_server_error
   end
 
   def handle_not_found_exception(exception)
