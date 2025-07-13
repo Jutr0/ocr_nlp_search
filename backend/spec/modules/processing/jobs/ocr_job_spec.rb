@@ -1,4 +1,3 @@
-# spec/jobs/processing/ocr_job_spec.rb
 
 require 'rails_helper'
 module Processing
