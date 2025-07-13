@@ -10,7 +10,6 @@ require 'seeds/basic_seed'
 require 'examples/authorization_examples'
 require 'test_helper'
 require 'helpers/match_schema'
-require 'fakeredis/rspec'
 
 # Add additional requires below this line. Rails is not loaded until this point!
 

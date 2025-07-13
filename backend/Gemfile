@@ -40,5 +40,4 @@ end
 
 group :test do
   gem 'database_cleaner-active_record', '~> 2.1'
-  gem 'fakeredis', '~> 0.8.0'
 end

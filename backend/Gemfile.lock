@@ -135,8 +135,6 @@ GEM
     factory_bot_rails (6.4.4)
       factory_bot (~> 6.5)
       railties (>= 5.0.0)
-    fakeredis (0.8.0)
-      redis (~> 4.1)
     faraday (2.13.1)
       faraday-net_http (>= 2.0, < 3.5)
       json
@@ -295,7 +293,6 @@ GEM
     rake (13.2.1)
     rdoc (6.13.0)
       psych (>= 4.0.0)
-    redis (4.8.1)
     redis-client (0.24.0)
       connection_pool
     regexp_parser (2.10.0)
@@ -423,7 +420,6 @@ DEPENDENCIES
   devise-jwt
   dotenv-rails
   factory_bot_rails
-  fakeredis (~> 0.8.0)
   image_processing (~> 1.12)
   interactor
   jbuilder
