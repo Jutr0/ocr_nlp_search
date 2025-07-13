@@ -20,7 +20,6 @@ module Documents
         when "processing.nlp.failed"
           document.update!(status: Document.statuses[:nlp_retrying])
         when "processing.nlp.succeeded"
-          puts data.extracted_fields.to_h
           document.update!(status: Document.statuses[:to_review], **data.extracted_fields.to_h)
         end
       end

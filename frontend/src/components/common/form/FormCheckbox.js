@@ -1,4 +1,3 @@
-// src/components/inputs/FormCheckbox.jsx
 import React from 'react';
 import {Checkbox, FormControl, FormControlLabel, FormHelperText} from '@mui/material';
 
