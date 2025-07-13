@@ -2,7 +2,7 @@ module Documents
   class DocumentsController < ApplicationController
     include ActiveStorage::SetCurrent
     load_and_authorize_resource
-
+    before_action :check_to_review_status, only: [:approve, :reject]
     def index
     end
 
@@ -11,6 +11,7 @@ module Documents
 
     def destroy
       @document.destroy!
+      head :ok
     end
 
     def create
@@ -22,10 +23,12 @@ module Documents
 
     def refresh_ocr
       DocumentOcrRefreshEvent.call(@document)
+      head :ok
     end
 
     def refresh_nlp
       DocumentNlpRefreshEvent.call(@document)
+      head :ok
     end
 
     def to_review
@@ -34,10 +37,12 @@ module Documents
 
     def approve
       ApproveDocument.call!(document: @document)
+      head :ok
     end
 
     def reject
       RejectDocument.call!(document: @document)
+      head :ok
     end
 
     private
@@ -45,5 +50,13 @@ module Documents
     def document_params
       params.permit(:file)
     end
+
+    def check_to_review_status
+      unless @document.to_review?
+        @document.errors.add(:status, "must be in to_review state")
+        raise ActiveRecord::RecordInvalid.new(@document)
+      end
+    end
+
   end
 end

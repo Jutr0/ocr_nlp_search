@@ -1,0 +1,15 @@
+[
+  {
+    "id": "HIDDEN",
+    "doc_type": "invoice",
+    "status": "to_review",
+    "gross_amount": "10000.0",
+    "net_amount": "9000.0",
+    "category": "sales",
+    "file": {
+      "url": "HIDDEN",
+      "filename": "dummy.pdf",
+      "type": "application/pdf"
+    }
+  }
+]

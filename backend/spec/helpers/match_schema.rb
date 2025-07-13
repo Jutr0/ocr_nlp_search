@@ -64,6 +64,9 @@ RSpec::Matchers.define :match_schema do |schema_name|
     body
       .gsub(/"id"\s*:\s*"[^"]*"/, '"id": "HIDDEN"')
       .gsub(/"url"\s*:\s*"[^"]*"/, '"url": "HIDDEN"')
+      .gsub(/"([A-Za-z0-9_]+_id)"\s*:\s*"[^"]*"/, '"\1": "HIDDEN"')
+      .gsub(/"([A-Za-z0-9_]+_url)"\s*:\s*"[^"]*"/, '"\1": "HIDDEN"')
+
   end
 end
 

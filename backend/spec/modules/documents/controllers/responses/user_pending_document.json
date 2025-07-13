@@ -1,6 +1,6 @@
 {
   "id": "HIDDEN",
-  "filename": null,
+  "filename": "dummy.pdf",
   "status": "pending",
   "text_ocr": null,
   "category": null,
@@ -14,7 +14,7 @@
   "currency": null,
   "file": {
     "url": "HIDDEN",
-    "filename": null,
+    "filename": "dummy.pdf",
     "type": "application/pdf"
   }
 }

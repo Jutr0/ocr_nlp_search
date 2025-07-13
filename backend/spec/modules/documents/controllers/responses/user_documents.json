@@ -2,7 +2,7 @@
   {
     "id": "HIDDEN",
     "created_at": "2025-01-01T00:00:00.000Z",
-    "filename": null,
+    "filename": "dummy.pdf",
     "doc_type": null,
     "status": "pending",
     "gross_amount": null
@@ -10,9 +10,17 @@
   {
     "id": "HIDDEN",
     "created_at": "2025-01-01T00:00:00.000Z",
-    "filename": null,
-    "doc_type": null,
+    "filename": "dummy.pdf",
+    "doc_type": "invoice",
     "status": "approved",
-    "gross_amount": null
+    "gross_amount": "10000.0"
+  },
+  {
+    "id": "HIDDEN",
+    "created_at": "2025-01-01T00:00:00.000Z",
+    "filename": "dummy.pdf",
+    "doc_type": "invoice",
+    "status": "to_review",
+    "gross_amount": "10000.0"
   }
 ]

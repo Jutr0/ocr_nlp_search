@@ -6,6 +6,15 @@ module Documents
     include Devise::Test::ControllerHelpers
     include_examples 'documents_seed'
 
+    before do
+      allow(BasePublisher).to receive(:publish) do |payload|
+        topic, event, data = payload.values_at(:topic, :event, :data)
+        @topic = topic
+        @event = event
+        @data = data
+      end
+    end
+
     describe 'GET #index' do
       include_examples 'an user-only endpoint', :get, :index
 
@@ -111,18 +120,176 @@ module Documents
         expect {
           delete :destroy, params: { id: pending_document.id }, format: :json
         }.to change(Document, :count).by(-1)
-        puts response.body
-        expect(response).to have_http_status(:no_content)
+        expect(response).to have_http_status(:ok)
       end
 
       it "returns 401 Unauthorized when user is not document's owner" do
         sign_in user
-        expect {
-          delete :destroy, params: { id: pending_document.id }, format: :json
-        }.to change(Document, :count).by(-1)
-        puts response.body
-        expect(response).to have_http_status(:no_content)
+        delete :destroy, params: { id: another_user_document.id }, format: :json
+        expect(response).to have_http_status(:unauthorized)
       end
     end
+
+    describe 'GET #refresh_ocr' do
+
+      include_examples 'an user-only endpoint',
+                       :get,
+                       :refresh_ocr,
+                       -> { { id: pending_document.id } }
+
+      it 'publish refresh ocr event when user signed in' do
+        sign_in user
+        get :refresh_ocr, params: { id: pending_document.id }, format: :json
+        expect(response).to have_http_status(:ok)
+
+        expect(@topic).to eq(:documents_stream)
+        expect(@event).to eq('documents.ocr.refresh')
+        expect(@data.to_json).to match_schema('refresh_ocr_payload')
+      end
+
+      it "returns 401 Unauthorized when user is not document's owner" do
+        sign_in user
+        get :refresh_ocr, params: { id: another_user_document.id }, format: :json
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+    describe 'GET #refresh_nlp' do
+
+      include_examples 'an user-only endpoint',
+                       :get,
+                       :refresh_nlp,
+                       -> { { id: approved_document.id } }
+
+      it 'publish refresh nlp event when user signed in' do
+        sign_in user
+        get :refresh_nlp, params: { id: approved_document.id }, format: :json
+        expect(response).to have_http_status(:ok)
+
+        expect(@topic).to eq(:documents_stream)
+        expect(@event).to eq('documents.nlp.refresh')
+        expect(@data.to_json).to match_schema('refresh_nlp_payload')
+      end
+
+      it "returns 401 Unauthorized when user is not document's owner" do
+        sign_in user
+        get :refresh_nlp, params: { id: another_user_document.id }, format: :json
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    describe 'GET #to_review' do
+      include_examples 'an user-only endpoint', :get, :to_review
+
+      context "returns list of signed user's documents" do
+        it 'user' do
+          sign_in user
+          get :to_review, format: :json
+
+          expect(response).to have_http_status(:ok)
+          json = JSON.parse(response.body)
+          expect(json).to be_an(Array)
+          ids = json.map { |d| d['id'] }
+          expect(ids).to include(to_review_document.id)
+
+          [
+            pending_document,
+            approved_document,
+            another_user_document,
+            another_user_to_review_document
+          ].each do |doc|
+            expect(ids).not_to include(doc.id)
+          end
+        end
+
+        it 'another user' do
+          sign_in another_user
+          get :to_review, format: :json
+
+          expect(response).to have_http_status(:ok)
+          json = JSON.parse(response.body)
+          expect(json).to be_an(Array)
+          ids = json.map { |d| d['id'] }
+          expect(ids).to include(another_user_to_review_document.id)
+
+          [
+            pending_document,
+            approved_document,
+            another_user_document,
+            to_review_document
+          ].each do |doc|
+            expect(ids).not_to include(doc.id)
+          end
+        end
+      end
+
+      it 'renders the expected fields for each document' do
+        sign_in user
+        get :to_review, format: :json
+        expect(response.body).to match_schema('user_to_review_documents')
+      end
+    end
+
+    describe 'POST #approve' do
+      include_examples 'an user-only endpoint',
+                       :post,
+                       :approve,
+                       -> { { id: to_review_document.id } }
+
+      it "change document status to approved" do
+        sign_in user
+        post :approve, params: { id: to_review_document.id }, format: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(to_review_document.reload).to be_approved
+      end
+
+      it 'returns 422 Unprocessable Entity if document is not to_review' do
+        sign_in user
+        post :approve, params: { id: pending_document.id }, format: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(pending_document.reload).not_to be_approved
+      end
+
+      it "returns 401 Unauthorized when user is not document's owner" do
+        sign_in user
+        post :approve, params: { id: another_user_document.id }, format: :json
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    describe 'POST #reject' do
+      include_examples 'an user-only endpoint',
+                       :post,
+                       :reject,
+                       -> { { id: to_review_document.id } }
+
+      it "change document status to reject" do
+        sign_in user
+        post :reject, params: { id: to_review_document.id }, format: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(to_review_document.reload).to be_failed
+      end
+
+      it 'returns 422 Unprocessable Entity if document is not to_review' do
+        sign_in user
+        post :reject, params: { id: pending_document.id }, format: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(pending_document.reload).not_to be_failed
+      end
+
+      it "returns 401 Unauthorized when user is not document's owner" do
+        sign_in user
+        post :reject, params: { id: another_user_document.id }, format: :json
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
   end
 end
