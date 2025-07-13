@@ -29,7 +29,7 @@ module Processing
       NlpJob.perform_later(document.to_h.slice(:text_ocr, :document_id))
     rescue => e
       Rails.logger.error "[OCRJob] Error on Document #{document.document_id}: #{e.message}"
-      OcrFailedEvent.call(document, e.slice(:message))
+      OcrFailedEvent.call(document, { message: e.message })
       raise e
     end
 
@@ -74,7 +74,6 @@ module Processing
       text = ""
       PDF::Reader.new(path).pages.each do |page|
         text << page.text
-        text << "\n---\n"
       end
       text.strip
     end
