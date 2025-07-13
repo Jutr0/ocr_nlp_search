@@ -1,5 +1,6 @@
+DEFAULT_PASSWORD = 'password123'.freeze
+
 RSpec.shared_examples "basic_seed" do
-  DEFAULT_PASSWORD = 'password123'.freeze
 
   let(:superadmin) { Users::User.find_by(role: :superadmin) }
   let(:user) { Users::User.find_by(email: 'user@example.com') }
