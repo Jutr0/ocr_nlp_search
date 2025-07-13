@@ -31,7 +31,7 @@ module Processing
       NlpSucceededEvent.call(document)
     rescue => e
       Rails.logger.error "[NlpJob] Error for Document #{document.document_id}: #{e.message}"
-      NlpFailedEvent.call(document, e.slice(:message))
+      NlpFailedEvent.call(document, { message: e.message })
       raise e
     end
 

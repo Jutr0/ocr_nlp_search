@@ -30,6 +30,7 @@ module Documents
     end
 
     describe 'validations' do
+
       it { is_expected.to validate_presence_of(:status) }
       it { is_expected.to validate_presence_of(:file) }
 
@@ -45,6 +46,25 @@ module Documents
         doc.file.attach(file)
         expect(doc).to be_valid
       end
+
+      it 'is not able to change status to approved from other than to_review' do
+        [
+          "pending",
+          "ocr_processing",
+          "ocr_retrying",
+          "ocr_succeeded",
+          "nlp_processing",
+          "nlp_retrying"
+        ].each do |status|
+          document = Document.create!(user: user, status: status, file: file)
+          expect { document.update!(status: 'approved') }.to raise_error(ActiveRecord::RecordInvalid, 'Validation failed: Status can only be changed to approved when it is in the to_review state')
+        end
+
+        document = Document.create!(user: user, status: "to_review", file: file)
+        expect { document.update!(status: 'approved') }.not_to raise_error
+        expect(document).to be_approved
+      end
+
     end
 
     describe 'callbacks' do
