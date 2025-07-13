@@ -61,7 +61,7 @@ module Documents
         end
 
         document = Document.create!(user: user, status: "to_review", file: file)
-        expect { document.update!(status: 'approved') }.not_to raise_error(ActiveRecord::RecordInvalid, 'Validation failed: Status can only be changed to approved when it is in the to_review state')
+        expect { document.update!(status: 'approved') }.not_to raise_error
         expect(document).to be_approved
       end
 
