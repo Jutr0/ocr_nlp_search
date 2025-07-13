@@ -21,7 +21,7 @@ jobs:
 
     services:
       postgres:
-        image: supabase/postgres:15.4.0
+        image: ramsrib/pgvector:15
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
