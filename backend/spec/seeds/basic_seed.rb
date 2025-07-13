@@ -8,6 +8,7 @@ RSpec.shared_examples "basic_seed" do
 
   before(:each) do
     populate_users
+    create_mocks
   end
 
   around do |example|
@@ -27,4 +28,9 @@ RSpec.shared_examples "basic_seed" do
       Users::User.create!({ password: DEFAULT_PASSWORD, **attrs })
     end
   end
+
+  def create_mocks
+    FakeRedis.enable
+  end
+
 end
