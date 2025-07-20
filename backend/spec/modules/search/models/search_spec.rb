@@ -8,12 +8,12 @@ module Search
         Search.kaboom_files!
         search = Search.new
 
-        search.index("hello world")
-        search.index("hello mate")
-        search.index("Cat is black")
-        search.index("Brown cat is black")
-        search.index("Hello brown cat")
-        search.index("Hell is where brownie blame category")
+        search.index("hello world", 12)
+        search.index("hello mate", 23)
+        search.index("Cat is black", 34)
+        search.index("Brown cat is black", 45)
+        search.index("Hello brown cat", 56)
+        search.index("Hell is where brownie blame category", 67)
 
         search.flush!
 

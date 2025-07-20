@@ -2,115 +2,120 @@ require 'digest'
 
 module Search
   class Search
-
-    class Paths
-      BASE_DIR = "search"
-      WORDS_DIR = "#{BASE_DIR}/words"
-      DOCUMENTS_DIR = "#{BASE_DIR}/documents"
-      GRAVEYARD_DIR = "#{BASE_DIR}/graveyard"
-      WORDS = "#{WORDS_DIR}/words.json"
-      DOCUMENTS = "#{DOCUMENTS_DIR}/documents.json"
-      GRAVEYARD = "#{GRAVEYARD_DIR}/.graveyard"
-    end
+    INDEX_DIR = "search"
 
     def initialize
-      FileUtils.mkdir_p(Paths::WORDS_DIR)
-      FileUtils.mkdir_p(Paths::DOCUMENTS_DIR)
-
-      @documents = {}
+      FileUtils.mkdir_p(INDEX_DIR)
+      @current_generation = 0
+      @documents = []
       @words = {}
     end
 
-    def index(sentence)
+    def index(sentence, id)
       mapped_sentence = sentence.downcase.gsub(/[^a-z0-9\s]/i, '')
 
-      document_hash = Digest::SHA256.hexdigest(sentence)
-      @documents[document_hash] = sentence
+      docIdx = @documents.length
+
+      @documents << id
 
       mapped_sentence.split(" ").each do |word|
-        next if word.length < 3
-        prefix = word[0..2]
-        @words[prefix] ||= {}
-        if @words[prefix][word].present?
-          @words[prefix][word] << document_hash
+        next if word.length < 2
+
+        @words ||= {}
+        if @words[word].present?
+          if @words[word][docIdx].present?
+            @words[word][docIdx][:freq] += 1
+          else
+            @words[word][docIdx] = { freq: 1 }
+          end
         else
-          @words[prefix][word] = [document_hash]
+          @words[word] = { docIdx => { freq: 1 } }
         end
       end
     end
 
     def search(query)
-      documents = JSON.parse(File.read(Paths::DOCUMENTS))
-      mapped_query = query.downcase.gsub(/[^a-z0-9\s]/i, '')
-      loaded_words_files = {}
-      found_documents = []
-      mapped_query.split(" ").each do |word|
-        next if word.length < 3
-
-        prefix = word[0..2]
-        if loaded_words_files[prefix].present?
-          words = loaded_words_files[prefix]
-        else
-          if File.exist?(get_words_file_path(prefix))
-            words_file = File.read(get_words_file_path(prefix))
-            words = JSON.parse(words_file)
-          else
-            words = {}
-          end
-          loaded_words_files[prefix] = words
-        end
-
-        found_documents.concat(words[word]) if words[word].present?
-      end
-
-      found_documents.uniq.map do |document_hash|
-        documents[document_hash]
-      end
+      # index search through all files like lucene
     end
 
     def flush!
-      documents_json = @documents.to_json
-      @documents = {}
+      # current implementation will work with pointers to specific line in document so some files are not necessary but lets leave it to keep lucene's flow
+      # for V2 this will point to block and offset in each file ( same as in lucene )
 
-      FileUtils.mkdir_p(Paths::DOCUMENTS_DIR)
-      File.write(Paths::DOCUMENTS, documents_json)
-      flush_words
+      field_pointers = create_field_data
+      field_metadata_pointers = create_field_metadata(field_pointers)
+      create_field_index(field_metadata_pointers)
 
+      term_info = create_doc_values
+      term_prefixes_positions = create_term_info(term_info)
+      create_term_index(term_prefixes_positions)
+
+      @current_generation += 1
     end
 
     def self.kaboom_files!
-      FileUtils.rm_rf(Paths::BASE_DIR) if File.exist?(Paths::BASE_DIR)
+      FileUtils.rm_rf(INDEX_DIR) if File.exist?(INDEX_DIR)
     end
 
     private
 
-    def flush_words
-      # inefficient but for V1 will be fine
-      # also in next iteration remember about flock or sth similar
+    def create_field_data
 
-      @words.each do |prefix, words|
-        if File.exist?(get_words_file_path(prefix))
-          file = File.read(get_words_file_path(prefix))
-          current_words = JSON.parse(file)
-        else
-          current_words = {}
-        end
-        words.each do |word, documents|
-          if current_words[word].present?
-            current_words[word] = (current_words[word] + documents).uniq
-          else
-            current_words[word] = documents.uniq
-          end
-        end
-
-        File.write(get_words_file_path(prefix), current_words.to_json)
-      end
-      @words = {}
-
+      field_data = File.new("#{INDEX_DIR}/_#{@current_generation}.fdt", "w+")
+      field_data.write(@documents.join("\n"))
+      Array.new(@documents.length) { |i| i + 1 }
     end
 
-    def get_words_file_path(prefix)
-      Paths::WORDS_DIR + "/#{prefix}.json"
+    def create_field_metadata(field_pointers)
+      field_metadata = File.new("#{INDEX_DIR}/_#{@current_generation}.fnm", "w+")
+      field_metadata.write(field_pointers.join("\n"))
+      field_pointers
+    end
+
+    def create_field_index(field_metadata_pointers)
+
+      field_index = File.new("#{INDEX_DIR}/_#{@current_generation}.fdi", "w+")
+      i = 0
+      while i < @documents.length
+        field_index.write("#{i} #{field_metadata_pointers[i]}\n")
+        i += 1
+      end
+    end
+
+    def create_doc_values
+      doc_values = File.new("#{INDEX_DIR}/_#{@current_generation}.doc", "w+")
+      current_line = 1
+      term_info = {}
+      @words.sort_by(&:first).each do |word, documentsIdxs|
+        term_info[word] = { doc_freq: documentsIdxs.length, doc_start_fp: current_line }
+        documentsIdxs.each do |documentIdx, values|
+          doc_values.write("#{documentIdx} #{values[:freq]}\n")
+          current_line += 1
+        end
+      end
+      term_info
+    end
+
+    def create_term_info(term_info)
+      term_info_file = File.new("#{INDEX_DIR}/_#{@current_generation}.tim", "w+")
+      term_prefixes_positions = {}
+      current_line = 1
+      term_info.each do |word, info|
+        if term_prefixes_positions[word[0..1]].nil?
+          term_prefixes_positions[word[0..1]] = { start_pos: current_line }
+        end
+
+        term_info_file.write("#{word} #{info[:doc_freq]} #{info[:doc_start_fp]}\n")
+        current_line += 1
+      end
+
+      term_prefixes_positions
+    end
+    def create_term_index(term_prefixes_positions)
+      term_index_file = File.new("#{INDEX_DIR}/_#{@current_generation}.tip", "w+")
+      term_prefixes_positions.each do |prefix, values|
+        term_index_file.write("#{prefix} #{values[:start_pos]}\n")
+      end
     end
 
   end
