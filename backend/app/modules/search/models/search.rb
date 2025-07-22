@@ -3,6 +3,7 @@ require "digest"
 module Search
   class Search
     INDEX_DIR = "search"
+    MIN_WORD_LENGTH = 2
 
     def initialize
       FileUtils.mkdir_p(INDEX_DIR)
@@ -19,7 +20,7 @@ module Search
       @documents << id
 
       mapped_sentence.split(" ").each do |word|
-        next if word.length < 2
+        next if word.length < MIN_WORD_LENGTH
 
         @words ||= {}
         if @words[word].present?
@@ -34,7 +35,22 @@ module Search
       end
     end
 
-    def search(query) end
+    def search(query)
+      segments_path = get_current_segments_file
+
+      raise "No segments file found" if segments_path.nil?
+
+      query = query.downcase.gsub(/[^a-z0-9\s]/i, "")
+
+      segments = JSON.parse(File.read(segments_path))
+      document_ids = []
+
+      # In V2 this will search through segments concurrently
+      segments["segments"].each do |segment|
+        document_ids.concat(search_in_segment(segment["name"], query))
+      end
+      document_ids
+    end
 
     def flush!
       # current implementation will work with pointers to specific line in document so some files are not necessary but lets leave it to keep lucene's flow
@@ -70,6 +86,96 @@ module Search
 
     private
 
+    def search_in_segment(segment_name, query)
+      document_ids = []
+
+      query.split(" ").each do |word|
+        next if word.length < MIN_WORD_LENGTH
+
+        term_info_position = get_term_info_position(segment_name, word[0...MIN_WORD_LENGTH])
+        next if term_info_position == -1
+
+        term_doc_info = get_term_doc_info(segment_name, term_info_position, word)
+        next if term_doc_info.nil?
+
+        doc_ids = get_doc_ids(segment_name, term_doc_info)
+
+        doc_ids.each do |doc_id|
+          doc_metadata_position = get_doc_metadata_position(segment_name, doc_id)
+          doc_data_position = get_doc_data_position(segment_name, doc_metadata_position)
+          document_ids << get_doc_data(segment_name, doc_data_position)
+        end
+
+      end
+
+      document_ids
+    end
+
+    def get_term_info_position(segment_name, prefix)
+      file = File.read("#{INDEX_DIR}/#{segment_name}.tip")
+
+      # this should use binary search
+      file.lines.each do |line|
+        if line.split(" ")[0] == prefix
+          return line.split(" ")[1].to_i
+        end
+      end
+
+      -1
+    end
+
+    def get_term_doc_info(segment_name, term_info_position, word)
+      # Also, ideally, here should load to memory only the necessary block where this word is located
+
+      file = File.read("#{INDEX_DIR}/#{segment_name}.tim")
+      i = term_info_position
+      while i < file.lines.length
+        line_parts = file.lines[i].split(" ")
+        if line_parts[0] == word
+          return { doc_freq: line_parts[1].to_i, doc_start_fp: line_parts[2].to_i }
+        end
+        i += 1
+      end
+    end
+
+    def get_doc_ids(segment_name, term_doc_info)
+      # same should load only part of the file
+      file = File.read("#{INDEX_DIR}/#{segment_name}.doc")
+
+      doc_ids = []
+      i = term_doc_info[:doc_start_fp]
+      while i < term_doc_info[:doc_start_fp] + term_doc_info[:doc_freq]
+        doc_ids << file.lines[i].split(" ")[0].to_i
+        i += 1
+      end
+
+      doc_ids
+    end
+
+    def get_doc_metadata_position(segment_name, doc_id)
+      # this actually has to load the whole file and search for doc id
+
+      file = File.read("#{INDEX_DIR}/#{segment_name}.fdi")
+      file.lines.each do |line|
+        if line.split(" ")[0] == doc_id.to_s
+          return line.split(" ")[1].to_i
+        end
+      end
+    end
+
+    def get_doc_data_position(segment_name, doc_metadata_position)
+      # here we have exact position so only part of the file could be loaded
+
+      file = File.read("#{INDEX_DIR}/#{segment_name}.fdm")
+      file.lines[doc_metadata_position].to_i
+    end
+
+    def get_doc_data(segment_name, doc_data_position)
+      # especially here only one block should be loaded...
+      file = File.read("#{INDEX_DIR}/#{segment_name}.fdt")
+      file.lines[doc_data_position].chomp
+    end
+
     def get_current_segments_file
       files = Dir.entries(INDEX_DIR).select { |f| f =~ /^segments_(\d+)$/ }
 
@@ -102,62 +208,73 @@ module Search
     end
 
     def create_field_data
-
-      field_data = File.new("#{INDEX_DIR}/_#{@current_generation}.fdt", "w+")
-      field_data.write(@documents.join("\n"))
-      Array.new(@documents.length) { |i| i + 1 }
+      File.open("#{INDEX_DIR}/_#{@current_generation}.fdt", "w") do |f|
+        f.write(@documents.join("\n"))
+      end
+      Array.new(@documents.length) { |i| i }
     end
 
     def create_field_metadata(field_pointers)
-      field_metadata = File.new("#{INDEX_DIR}/_#{@current_generation}.fdm", "w+")
-      field_metadata.write(field_pointers.join("\n"))
+      File.open("#{INDEX_DIR}/_#{@current_generation}.fdm", "w") do |f|
+        f.write(field_pointers.join("\n"))
+      end
       field_pointers
     end
 
     def create_field_index(field_metadata_pointers)
 
-      field_index = File.new("#{INDEX_DIR}/_#{@current_generation}.fdi", "w+")
-      i = 0
-      while i < field_metadata_pointers.length
-        field_index.write("#{i} #{field_metadata_pointers[i]}\n")
-        i += 1
+      File.open("#{INDEX_DIR}/_#{@current_generation}.fdi", "w") do |f|
+        i = 0
+        while i < field_metadata_pointers.length
+          f.write("#{i} #{field_metadata_pointers[i]}\n")
+          i += 1
+        end
       end
+
     end
 
     def create_doc_values
-      doc_values = File.new("#{INDEX_DIR}/_#{@current_generation}.doc", "w+")
-      current_line = 1
       term_info = {}
-      @words.sort_by(&:first).each do |word, documentsIdxs|
-        term_info[word] = { doc_freq: documentsIdxs.length, doc_start_fp: current_line }
-        documentsIdxs.each do |documentIdx, values|
-          doc_values.write("#{documentIdx} #{values[:freq]}\n")
-          current_line += 1
+
+      File.open("#{INDEX_DIR}/_#{@current_generation}.doc", "w") do |f|
+        current_line = 0
+        @words.sort_by(&:first).each do |word, documentsIdxs|
+          term_info[word] = { doc_freq: documentsIdxs.length, doc_start_fp: current_line }
+          documentsIdxs.each do |documentIdx, values|
+            f.write("#{documentIdx} #{values[:freq]}\n")
+            current_line += 1
+          end
         end
       end
+
       term_info
     end
 
     def create_term_info(term_info)
-      term_info_file = File.new("#{INDEX_DIR}/_#{@current_generation}.tim", "w+")
       term_prefixes_positions = {}
-      current_line = 1
-      term_info.each do |word, info|
-        if term_prefixes_positions[word[0..1]].nil?
-          term_prefixes_positions[word[0..1]] = { start_pos: current_line }
+
+      File.open("#{INDEX_DIR}/_#{@current_generation}.tim", "w") do |f|
+        current_line = 0
+        term_info.each do |word, info|
+          prefix = word[0...MIN_WORD_LENGTH]
+          if term_prefixes_positions[prefix].nil?
+            term_prefixes_positions[prefix] = { start_pos: current_line }
+          end
+
+          f.write("#{word} #{info[:doc_freq]} #{info[:doc_start_fp]}\n")
+          current_line += 1
         end
 
-        term_info_file.write("#{word} #{info[:doc_freq]} #{info[:doc_start_fp]}\n")
-        current_line += 1
       end
 
       term_prefixes_positions
     end
 
     def create_term_index(term_prefixes_positions)
-      term_index_file = File.new("#{INDEX_DIR}/_#{@current_generation}.tip", "w+")
-      term_prefixes_positions.each do |prefix, values|
-        term_index_file.write("#{prefix} #{values[:start_pos]}\n")
+      File.open("#{INDEX_DIR}/_#{@current_generation}.tip", "w") do |f|
+        term_prefixes_positions.each do |prefix, values|
+          f.write("#{prefix} #{values[:start_pos]}\n")
+        end
       end
     end
 

@@ -8,7 +8,7 @@ module Search
         Search.kaboom_files!
         search = Search.new
 
-        search.index("hello world", 12)
+        search.index("hello world Hello", 12)
         search.index("hello mate", 23)
         search.index("Cat is black", 34)
         search.index("Brown cat is black", 45)
@@ -17,14 +17,15 @@ module Search
 
         search.flush!
 
-        search.index("Hello brown cat", 56)
-        search.index("Hell is where brownie blame category", 67)
+        search.index("Hello brown cat", 562)
+        search.index("Hell is where a brownie blame category", 672)
 
         search.flush!
 
-        # expect(search.search("hello")).to eq(["hello world", "hello mate", "Hello brown cat"])
-        # expect(search.search("Cat")).to eq(["Cat is black", "Brown cat is black", "Hello brown cat"])
-        expect(search.search("hello bro blame")).to eq(["hello world", "hello mate", "Hello brown cat", "Hell is where brownie blame category"])
+        # For 'OR' search with multiple words
+        expect(search.search("hello    a no here")).to eq(["12", "23", "56", "562"])
+        expect(search.search("Cat")).to eq(["34", "45", "56", "562"])
+        expect(search.search("MATE where")).to eq(["23", "67", "672"])
 
       end
     end
