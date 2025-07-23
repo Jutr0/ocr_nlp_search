@@ -7,7 +7,7 @@ module Search
 
     def initialize
       FileUtils.mkdir_p(INDEX_DIR)
-      @current_generation = 0
+      @name_count = 0
       @documents = []
       @words = {}
     end
@@ -17,7 +17,7 @@ module Search
 
       docIdx = @documents.length
 
-      @documents << id
+      @documents << id.to_s
 
       mapped_sentence.split(" ").each do |word|
         next if word.length < MIN_WORD_LENGTH
@@ -59,13 +59,15 @@ module Search
       segments_path = get_current_segments_file
       if segments_path.nil?
         create_segments_info(0)
-        @current_generation = 0
+        @name_count = 0
       else
         current_generation = get_current_generation(segments_path)
         segments = JSON.parse(File.read(segments_path))
-        @current_generation = segments["name_count"]
+        @name_count = segments["name_count"]
 
-        create_segments_info(current_generation + 1, segments)
+        deleted_documents = get_deleted_documents(segments["segments"].map { |s| s["name"] })
+        deleted_documents_counts = update_graveyard(deleted_documents, segments["segments"])
+        create_segments_info(current_generation + 1, segments, deleted_documents_counts)
       end
 
       field_pointers = create_field_data
@@ -192,14 +194,87 @@ module Search
       File.basename(segments_path).match(/^segments_(\d+)$/)[1].to_i
     end
 
-    def create_segments_info(generation, current_segments_info = nil)
+    def get_deleted_documents(segments_names)
+      deleted_documents = {}
+      segments_names.each do |name|
+        file = File.read("#{INDEX_DIR}/#{name}.fdt")
+        file.lines.each_with_index do |line, i|
+          if @documents.include?(line.chomp)
+            deleted_documents[name] ||= []
+            deleted_documents[name] << i
+          end
+        end
+      end
+      deleted_documents
+    end
+
+    def update_graveyard(deleted_documents, segments)
+      deleted_documents_counts = {}
+      segments.each do |segment|
+        if deleted_documents[segment["name"]].present?
+          if segment["del_gen"] == -1
+            bytes_needed = (segment["max_docs"] + 7) / 8
+            buf = "\xFF" * bytes_needed
+            File.binwrite("#{INDEX_DIR}/#{segment["name"]}_1.liv", buf)
+            File.open("#{INDEX_DIR}/#{segment["name"]}_1.liv", "rb+") do |io|
+              deleted_documents[segment["name"]].each do |i|
+                byte_no = i / 8
+                io.seek(byte_no)
+                byte = io.read(1).ord
+                current_value = (byte >> i % 8) & 1
+                next if current_value == 0
+
+                deleted_documents_counts[segment["name"]] ||= 0
+                deleted_documents_counts[segment["name"]] += 1
+                mask = 1 << (i % 8)
+                byte &= ~mask
+
+                io.seek(byte_no)
+                io.write([byte].pack("C"))
+              end
+            end
+            segment["del_gen"] = 1
+          else
+            File.open("#{INDEX_DIR}/#{segment["name"]}_#{segment["del_gen"]}.liv", "rb+") do |io|
+              deleted_documents[segment["name"]].each do |i|
+                byte_no = i / 8
+                io.seek(byte_no)
+                byte = io.read(1).ord
+                current_value = (byte >> i % 8) & 1
+                next if current_value == 0
+
+                deleted_documents_counts[segment["name"]] ||= 0
+                deleted_documents_counts[segment["name"]] += 1
+                mask = 1 << (i % 8)
+                byte &= ~mask
+
+                io.seek(byte_no)
+                io.write([byte].pack("C"))
+              end
+            end
+            if deleted_documents_counts[segment["name"]]
+              segment["del_gen"] += 1
+              File.rename("#{INDEX_DIR}/#{segment["name"]}_#{segment["del_gen"] - 1}.liv", "#{INDEX_DIR}/#{segment["name"]}_#{segment["del_gen"]}.liv")
+            end
+          end
+        end
+      end
+      deleted_documents_counts
+    end
+
+    def create_segments_info(generation, current_segments_info = nil, deleted_documents_counts = {})
 
       if current_segments_info.nil?
-        new_segments_info = { name_count: 1, segments: [name: "_0", max_docs: @documents.length, dels: 0, del_gen: -1] }
+        new_segments_info = { name_count: 1, segments: [name: "_0", max_docs: @documents.length, dels: 0, del_gen: -1] }.stringify_keys
       else
         new_segments_info = current_segments_info.dup
+        new_segments_info["segments"].each do |segment|
+          if deleted_documents_counts[segment["name"]].present?
+            segment["dels"] += deleted_documents_counts[segment["name"]]
+          end
+        end
         new_segments_info["name_count"] += 1
-        new_segments_info["segments"] << { name: "_#{generation}", max_docs: @documents.length, dels: 0, del_gen: -1 }
+        new_segments_info["segments"] << { name: "_#{generation}", max_docs: @documents.length, dels: 0, del_gen: -1 }.stringify_keys
       end
 
       File.open("#{INDEX_DIR}/segments_#{generation}", "w") do |f|
@@ -208,14 +283,14 @@ module Search
     end
 
     def create_field_data
-      File.open("#{INDEX_DIR}/_#{@current_generation}.fdt", "w") do |f|
+      File.open("#{INDEX_DIR}/_#{@name_count}.fdt", "w") do |f|
         f.write(@documents.join("\n"))
       end
       Array.new(@documents.length) { |i| i }
     end
 
     def create_field_metadata(field_pointers)
-      File.open("#{INDEX_DIR}/_#{@current_generation}.fdm", "w") do |f|
+      File.open("#{INDEX_DIR}/_#{@name_count}.fdm", "w") do |f|
         f.write(field_pointers.join("\n"))
       end
       field_pointers
@@ -223,7 +298,7 @@ module Search
 
     def create_field_index(field_metadata_pointers)
 
-      File.open("#{INDEX_DIR}/_#{@current_generation}.fdi", "w") do |f|
+      File.open("#{INDEX_DIR}/_#{@name_count}.fdi", "w") do |f|
         i = 0
         while i < field_metadata_pointers.length
           f.write("#{i} #{field_metadata_pointers[i]}\n")
@@ -236,7 +311,7 @@ module Search
     def create_doc_values
       term_info = {}
 
-      File.open("#{INDEX_DIR}/_#{@current_generation}.doc", "w") do |f|
+      File.open("#{INDEX_DIR}/_#{@name_count}.doc", "w") do |f|
         current_line = 0
         @words.sort_by(&:first).each do |word, documentsIdxs|
           term_info[word] = { doc_freq: documentsIdxs.length, doc_start_fp: current_line }
@@ -253,7 +328,7 @@ module Search
     def create_term_info(term_info)
       term_prefixes_positions = {}
 
-      File.open("#{INDEX_DIR}/_#{@current_generation}.tim", "w") do |f|
+      File.open("#{INDEX_DIR}/_#{@name_count}.tim", "w") do |f|
         current_line = 0
         term_info.each do |word, info|
           prefix = word[0...MIN_WORD_LENGTH]
@@ -271,7 +346,7 @@ module Search
     end
 
     def create_term_index(term_prefixes_positions)
-      File.open("#{INDEX_DIR}/_#{@current_generation}.tip", "w") do |f|
+      File.open("#{INDEX_DIR}/_#{@name_count}.tip", "w") do |f|
         term_prefixes_positions.each do |prefix, values|
           f.write("#{prefix} #{values[:start_pos]}\n")
         end

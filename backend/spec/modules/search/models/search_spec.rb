@@ -17,15 +17,24 @@ module Search
 
         search.flush!
 
-        search.index("Hello brown cat", 562)
-        search.index("Hell is where a brownie blame category", 672)
+        search.index("Hello brown cat", 56)
+        search.index("Hell is where a brownie blame category", 67)
+
+        search.flush!
+
+        search.index("Hello blue cat", 56)
+        search.index("New message!", 78)
+
+        search.flush!
+
+        search.index("Hello purple cat", 12)
 
         search.flush!
 
         # For 'OR' search with multiple words
-        expect(search.search("hello    a no here")).to eq(["12", "23", "56", "562"])
-        expect(search.search("Cat")).to eq(["34", "45", "56", "562"])
-        expect(search.search("MATE where")).to eq(["23", "67", "672"])
+        expect(search.search("hello    a no here")).to eq(["12", "23", "56"])
+        expect(search.search("Cat")).to eq(["34", "45", "56", "56"])
+        expect(search.search("MATE where")).to eq(["23", "67", "67"])
 
       end
     end
