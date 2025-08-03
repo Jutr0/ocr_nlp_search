@@ -9,6 +9,7 @@ module Search
       FileUtils.mkdir_p(INDEX_DIR)
       @name_count = 0
       @documents = []
+      @deleted_documents = {}
       @words = {}
     end
 
@@ -47,9 +48,17 @@ module Search
 
       # In V2 this will search through segments concurrently
       segments["segments"].each do |segment|
-        document_ids.concat(search_in_segment(segment["name"], query))
+        document_ids.concat(search_in_segment(segment, query))
       end
       document_ids
+    end
+
+    def delete(id)
+      segments_path = get_current_segments_file
+      return if segments_path.nil?
+      segments = JSON.parse(File.read(segments_path))
+      @name_count = segments["name_count"]
+      insert_deleted_documents(segments["segments"].map { |s| s["name"] }, [id.to_s])
     end
 
     def flush!
@@ -65,7 +74,7 @@ module Search
         segments = JSON.parse(File.read(segments_path))
         @name_count = segments["name_count"]
 
-        deleted_documents = get_deleted_documents(segments["segments"].map { |s| s["name"] })
+        deleted_documents = insert_deleted_documents(segments["segments"].map { |s| s["name"] })
         deleted_documents_counts = update_graveyard(deleted_documents, segments["segments"])
         create_segments_info(current_generation + 1, segments, deleted_documents_counts)
       end
@@ -79,6 +88,7 @@ module Search
       create_term_index(term_prefixes_positions)
 
       @documents = []
+      @deleted_documents = {}
       @words = {}
     end
 
@@ -88,7 +98,9 @@ module Search
 
     private
 
-    def search_in_segment(segment_name, query)
+    def search_in_segment(segment, query)
+      segment_name = segment["name"]
+      segment_del_gen = segment["del_gen"]
       document_ids = []
 
       query.split(" ").each do |word|
@@ -100,7 +112,7 @@ module Search
         term_doc_info = get_term_doc_info(segment_name, term_info_position, word)
         next if term_doc_info.nil?
 
-        doc_ids = get_doc_ids(segment_name, term_doc_info)
+        doc_ids = get_doc_ids(segment_name, term_doc_info, segment_del_gen)
 
         doc_ids.each do |doc_id|
           doc_metadata_position = get_doc_metadata_position(segment_name, doc_id)
@@ -140,17 +152,29 @@ module Search
       end
     end
 
-    def get_doc_ids(segment_name, term_doc_info)
+    def get_doc_ids(segment_name, term_doc_info, segment_del_gen)
       # same should load only part of the file
       file = File.read("#{INDEX_DIR}/#{segment_name}.doc")
+      graveyard = File.open("#{INDEX_DIR}/#{segment_name}_#{segment_del_gen}.liv", "rb+") if segment_del_gen > -1
 
       doc_ids = []
       i = term_doc_info[:doc_start_fp]
       while i < term_doc_info[:doc_start_fp] + term_doc_info[:doc_freq]
-        doc_ids << file.lines[i].split(" ")[0].to_i
+
+        doc_id = file.lines[i].split(" ")[0].to_i
         i += 1
+        if segment_del_gen > -1
+          byte_no = doc_id / 8
+          graveyard.seek(byte_no)
+          byte = graveyard.read(1).ord
+          current_value = (byte >> doc_id % 8) & 1
+          next if current_value == 0
+        end
+
+        doc_ids << doc_id
       end
 
+      graveyard.close if graveyard.present?
       doc_ids
     end
 
@@ -194,18 +218,17 @@ module Search
       File.basename(segments_path).match(/^segments_(\d+)$/)[1].to_i
     end
 
-    def get_deleted_documents(segments_names)
-      deleted_documents = {}
+    def insert_deleted_documents(segments_names, documents = @documents)
       segments_names.each do |name|
         file = File.read("#{INDEX_DIR}/#{name}.fdt")
         file.lines.each_with_index do |line, i|
-          if @documents.include?(line.chomp)
-            deleted_documents[name] ||= []
-            deleted_documents[name] << i
+          if documents.include?(line.chomp)
+            @deleted_documents[name] ||= []
+            @deleted_documents[name] << i
           end
         end
       end
-      deleted_documents
+      @deleted_documents
     end
 
     def update_graveyard(deleted_documents, segments)

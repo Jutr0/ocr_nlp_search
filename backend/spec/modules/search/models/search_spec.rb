@@ -32,9 +32,16 @@ module Search
         search.flush!
 
         # For 'OR' search with multiple words
-        expect(search.search("hello    a no here")).to eq(["12", "23", "56"])
-        expect(search.search("Cat")).to eq(["34", "45", "56", "56"])
-        expect(search.search("MATE where")).to eq(["23", "67", "67"])
+        expect(search.search("hello    a no here")).to eq(["23", "56", "12"])
+        expect(search.search("Cat")).to eq(["34", "45", "56", "12"])
+        expect(search.search("MATE where")).to eq(["23", "67"])
+        expect(search.search("world")).to eq([])
+
+        search.delete(23)
+
+        search.flush!
+
+        expect(search.search("MATE where")).to eq(["67"])
 
       end
     end
