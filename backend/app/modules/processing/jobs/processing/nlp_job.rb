@@ -52,16 +52,11 @@ module Processing
             {
               role: "user",
               content: <<~TEXT
-                OCR TEXT:
-                \"\"\"
-                #{ocr_text}
-                \"\"\"
-
                 Return this JSON format (no explanations!):
 
                 {
                   "document_type": "invoice", // one of: invoice, bill, receipt, other
-                  "category": "it_services", // one of: it_services, office_supplies, travel_&_transportation, marketing_&_advertising, legal_&_accounting, utilities_&_subscriptions, other
+                  "category": "it_services", // one of: it_services, office_supplies, travel_and_transportation, marketing_and_advertising, legal_and_accounting, utilities_and_subscriptions, other
                   "invoice_number": "...",
                   "issue_date": "YYYY-MM-DD",
                   "net_amount": ...,
@@ -70,6 +65,11 @@ module Processing
                   "nip": "...", //must be 10 digits (no dashes)
                   "company_name": "..."
                 }
+
+                OCR TEXT:
+                \"\"\"
+                #{ocr_text}
+                \"\"\"
               TEXT
             }
           ]

@@ -1,7 +1,11 @@
 import Box from "@mui/material/Box";
 import {Paper, Typography} from "@mui/material";
-import FilePreview from "../../common/FilePreview";
+import FilePreview from "../../../common/FilePreview";
 import React from "react";
+import HistoryLogs from "./historyLogs/HistoryLogs";
+import DocumentStatus from "./DocumentStatus";
+import DocumentCategory from "./DocumentCategory";
+import DocumentOcrOutput from "./DocumentOcrOutput";
 
 const DocumentPreview = ({document}) => {
 
@@ -39,28 +43,16 @@ const DocumentPreview = ({document}) => {
                 <Typography>Nip: {document.nip}</Typography>
             </Paper>
             <Paper elevation={2} sx={{p: 2}}>
-
-                <Typography variant="h6" gutterBottom>
-                    Category {document.category}
-                </Typography>
-                <Typography variant="h6" gutterBottom>
-                    Status {document.status}
-                </Typography>
+                <DocumentCategory category={document.category}/>
+                <DocumentStatus status={document.status}/>
             </Paper>
 
             <Paper elevation={2} sx={{p: 2}}>
-                <Typography variant="h6" gutterBottom>
-                    OCR Output
-                </Typography>
-                <Typography variant="body" gutterBottom>
-                    {document.text_ocr}
-                </Typography>
+                <DocumentOcrOutput text={document.text_ocr}/>
             </Paper>
 
             <Paper elevation={2} sx={{p: 2}}>
-                <Typography variant="h6" gutterBottom>
-                    History
-                </Typography>
+                <HistoryLogs historyLogs={document.history_logs}/>
             </Paper>
         </Box>
     </Box>

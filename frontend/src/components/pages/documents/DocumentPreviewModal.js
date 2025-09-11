@@ -1,5 +1,5 @@
 import Modal from "../../common/Modal";
-import DocumentPreview from "./DocumentPreview";
+import DocumentPreview from "./documentPreview/DocumentPreview";
 import {Button} from "@mui/material";
 import {buildActions} from "../../../utils/actionsBuilder";
 import {useEffect, useState} from "react";

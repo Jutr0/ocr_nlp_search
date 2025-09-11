@@ -13,6 +13,7 @@ module Documents
       end
 
       context.document.update!(status: Document.statuses[:ocr_retrying])
+      CreateHistoryLog.call!(document: context.document, action: DocumentHistoryLog.actions[:rejected])
       DocumentOcrRefreshEvent.call(context.document)
     end
   end
