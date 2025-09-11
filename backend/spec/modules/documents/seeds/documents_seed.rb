@@ -19,7 +19,7 @@ module Documents
     def populate_documents
 
       document_extracted_params = {
-        doc_type: "invoice", gross_amount: 10_000, net_amount: 9_000, category: "sales"
+        doc_type: "invoice", gross_amount: 10_000, net_amount: 9_000, category: "office_supplies"
       }
 
       [
