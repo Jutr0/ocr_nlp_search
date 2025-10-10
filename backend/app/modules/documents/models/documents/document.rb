@@ -68,13 +68,9 @@ module Documents
     validates :status, presence: true
     validate :only_to_review_can_be_approved, if: :will_save_change_to_status?
 
-    before_validation :truncate_nip_to_10_chars
+    normalizes :nip, with: ->(n) { n.to_s[0, 10] }
 
     private
-
-    def truncate_nip_to_10_chars
-      self.nip = nip.to_s[0, 10] if nip.present?
-    end
 
     def only_to_review_can_be_approved
       if self.id.present? && self.approved? && self.status_was != "to_review"

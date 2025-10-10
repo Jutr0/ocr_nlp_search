@@ -4,8 +4,6 @@
 #
 #  id             :uuid             not null, primary key
 #  action         :string           not null
-#  current_state  :string
-#  previous_state :string
 #  created_at     :datetime         not null
 #  updated_at     :datetime         not null
 #  document_id    :uuid             not null
@@ -36,7 +34,6 @@ module Documents
 
     belongs_to :document
 
-    validates :action, inclusion: { in: actions.values }
-
+    validates :document, presence: true
   end
 end
