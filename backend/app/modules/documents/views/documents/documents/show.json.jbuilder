@@ -7,5 +7,5 @@ json.file do
 end
 
 json.history_logs @document.history_logs do |history_log|
-  json.extract! history_log, :created_at, :action, :previous_state, :current_state
+  json.extract! history_log, :created_at, :action
 end
