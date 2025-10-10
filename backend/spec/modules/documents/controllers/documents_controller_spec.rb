@@ -16,7 +16,7 @@ module Documents
     end
 
     describe 'GET #index' do
-      include_examples 'an user-only endpoint', :get, :index
+      include_examples 'an user-only endpoint', method: :get, action: :index
 
       context "returns list of signed user's documents" do
         it 'user' do
@@ -54,9 +54,9 @@ module Documents
 
     describe 'GET #show' do
       include_examples 'an user-only endpoint',
-                       :get,
-                       :show,
-                       -> { { id: pending_document.id } }
+                       method: :get,
+                       action: :show,
+                       params_proc: -> { { id: pending_document.id } }
 
       it 'returns document data when user signed in' do
         sign_in user
@@ -82,9 +82,9 @@ module Documents
 
     describe 'POST #create' do
       include_examples 'an user-only endpoint',
-                       :post,
-                       :create,
-                       -> { { file: file } }
+                       method: :post,
+                       action: :create,
+                       params_proc: -> { { file: file } }
 
       it 'creates a document when user signed in' do
         sign_in user
@@ -117,9 +117,9 @@ module Documents
 
     describe 'DELETE #destroy' do
       include_examples 'an user-only endpoint',
-                       :delete,
-                       :destroy,
-                       -> { { id: pending_document.id } }
+                       method: :delete,
+                       action: :destroy,
+                       params_proc: -> { { id: pending_document.id } }
 
       it 'destroys document when user signed in' do
         sign_in user
@@ -139,9 +139,9 @@ module Documents
     describe 'GET #refresh_ocr' do
 
       include_examples 'an user-only endpoint',
-                       :get,
-                       :refresh_ocr,
-                       -> { { id: pending_document.id } }
+                       method: :get,
+                       action: :refresh_ocr,
+                       params_proc: -> { { id: pending_document.id } }
 
       it 'publish refresh ocr event when user signed in' do
         sign_in user
@@ -163,9 +163,9 @@ module Documents
     describe 'GET #refresh_nlp' do
 
       include_examples 'an user-only endpoint',
-                       :get,
-                       :refresh_nlp,
-                       -> { { id: approved_document.id } }
+                       method: :get,
+                       action: :refresh_nlp,
+                       params_proc: -> { { id: approved_document.id } }
 
       it 'publish refresh nlp event when user signed in' do
         sign_in user
@@ -186,7 +186,7 @@ module Documents
     end
 
     describe 'GET #to_review' do
-      include_examples 'an user-only endpoint', :get, :to_review
+      include_examples 'an user-only endpoint', method: :get, action: :to_review
 
       context "returns list of signed user's documents" do
         it 'user' do
@@ -239,9 +239,9 @@ module Documents
 
     describe 'POST #approve' do
       include_examples 'an user-only endpoint',
-                       :post,
-                       :approve,
-                       -> { { id: to_review_document.id } }
+                       method: :post,
+                       action: :approve,
+                       params_proc: -> { { id: to_review_document.id } }
 
       it "change document status to approved" do
         sign_in user
@@ -270,9 +270,9 @@ module Documents
 
     describe 'POST #reject' do
       include_examples 'an user-only endpoint',
-                       :post,
-                       :reject,
-                       -> { { id: to_review_document.id } }
+                       method: :post,
+                       action: :reject,
+                       params_proc: -> { { id: to_review_document.id } }
 
       it "change document status to reject" do
         sign_in user
