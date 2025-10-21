@@ -34,6 +34,6 @@ module Documents
 
     belongs_to :document
 
-    validates :document, presence: true
+    validates :document, :action, presence: true
   end
 end

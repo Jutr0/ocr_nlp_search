@@ -5,23 +5,24 @@ module Documents
   RSpec.describe CreateHistoryLog, type: :interactor do
     include_examples "documents_seed"
 
-    subject(:context) { CreateHistoryLog.call(document: pending_document, action: DocumentHistoryLog.actions[:created]) }
-
     it 'succeeds' do
+      context = CreateHistoryLog.call(document: pending_document, action: DocumentHistoryLog.actions[:created])
       expect(context).to be_success
     end
 
     context 'raises RecordInvalid' do
       it 'when action is nil' do
-        expect {
-          CreateHistoryLog.call(document: pending_document, action: nil)
-        }.to raise_error(ActiveRecord::RecordInvalid)
+        context = CreateHistoryLog.call(document: pending_document, action: nil)
+
+        expect(context).to be_failure
+        expect(context.errors.map(&:full_message)).to include("Action can't be blank")
       end
 
       it 'when document is nil' do
-        expect {
-          CreateHistoryLog.call(document: nil, action: DocumentHistoryLog.actions[:created])
-        }.to raise_error(ActiveRecord::RecordInvalid)
+        context = CreateHistoryLog.call(document: nil, action: DocumentHistoryLog.actions[:created])
+
+        expect(context).to be_failure
+        expect(context.errors.map(&:full_message)).to include("Document can't be blank")
       end
     end
   end
