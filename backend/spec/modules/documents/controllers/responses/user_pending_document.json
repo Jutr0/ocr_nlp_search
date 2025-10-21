@@ -3,7 +3,7 @@
   "filename": "dummy.pdf",
   "status": "pending",
   "text_ocr": null,
-  "category": null,
+  "category": "other",
   "issue_date": null,
   "invoice_number": null,
   "doc_type": null,
@@ -16,5 +16,6 @@
     "url": "HIDDEN",
     "filename": "dummy.pdf",
     "type": "application/pdf"
-  }
+  },
+  "history_logs": []
 }

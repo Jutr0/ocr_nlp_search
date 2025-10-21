@@ -23,6 +23,7 @@ const AuthorizedLinks = () => {
 
     return <>
         {currentUserLinks.map(link => <Button
+            key={link.path}
             color="inherit"
             component={NavLink}
             to={link.path}

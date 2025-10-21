@@ -13,6 +13,7 @@ module Documents
       end
 
       context.document.update!(status: Document.statuses[:approved])
+      CreateHistoryLog.call!(document: context.document, action: DocumentHistoryLog.actions[:approved])
     end
   end
 end

@@ -5,7 +5,7 @@
     "status": "to_review",
     "gross_amount": "10000.0",
     "net_amount": "9000.0",
-    "category": "sales",
+    "category": "office_supplies",
     "file": {
       "url": "HIDDEN",
       "filename": "dummy.pdf",

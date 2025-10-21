@@ -3,11 +3,12 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import {useEffect, useState} from "react";
 import Box from "@mui/material/Box";
 import Table from "../../common/Table";
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import {buildActions} from "../../../utils/actionsBuilder";
 import PageBody from "../../layout/PageBody";
 import Button from "../../common/Button";
 import DocumentsToReview from './DocumentsToReview.js';
+
 const columns = [
     {field: 'filename', headerName: 'Name'},
     {field: 'created_at', headerName: 'Upload date'},
@@ -17,7 +18,9 @@ const columns = [
 ]
 
 const Documents = () => {
-    const [tab, setTab] = useState("all");
+    const {tab: tabParam} = useParams();
+
+    const [tab, setTab] = useState(tabParam || "all");
     const [documents, setDocuments] = useState([]);
     const navigate = useNavigate();
     const actions = buildActions("document")
@@ -57,7 +60,8 @@ const Documents = () => {
 
     return <Box>
         <PageHeader icon={<DescriptionIcon color="primary"/>} breadcrumbs={[{label: "Documents"}]}
-                    tabs={[{label: "All", value: "all"}, {label: "To review", value: "to-review"}]} onTabChange={handleTabChange} activeTab={tab}
+                    tabs={[{label: "All", value: "all"}, {label: "To review", value: "to-review"}]}
+                    onTabChange={handleTabChange} activeTab={tab}
                     buttons={<Button variant='outlined' size='small' onClick={handleAdd}>+ Add document</Button>}
         />
         <PageBody withPadding={false}>
@@ -69,7 +73,7 @@ const Documents = () => {
                 actions={tableActions}
                 fullHeight
             />}
-            {tab === "to-review" && <DocumentsToReview />}
+            {tab === "to-review" && <DocumentsToReview/>}
         </PageBody>
     </Box>
 

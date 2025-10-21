@@ -33,12 +33,11 @@
 # Foreign Keys
 #
 #  fk_rails_...  (user_id => users.id)
+#
+#  fk_rails_...  (user_id => users.id)
 
 module Documents
   class Document < ApplicationRecord
-    belongs_to :user, class_name: "Users::User"
-    has_one_attached :file
-    before_validation :truncate_nip_to_10_chars
 
     enum :status, {
       pending: "pending",
@@ -51,23 +50,27 @@ module Documents
       approved: "approved"
     }, default: :pending
 
+    enum :category, {
+      it_services: "it_services",
+      office_supplies: "office_supplies",
+      travel_and_transportation: "marketing_and_advertising",
+      marketing_and_advertising: "marketing_and_advertising",
+      legal_and_accounting: "legal_and_accounting",
+      utilities_and_subscriptions: "utilities_and_subscriptions",
+      other: "other"
+    }, default: :other
+
+    belongs_to :user, class_name: "Users::User"
+    has_many :history_logs, class_name: "DocumentHistoryLog", dependent: :destroy
+    has_one_attached :file
+
     validates :file, attached: true, content_type: %w[application/pdf image/png image/jpeg]
     validates :status, presence: true
     validate :only_to_review_can_be_approved, if: :will_save_change_to_status?
 
-    scope :full_text, ->(q) {
-      return all if q.blank?
-
-      sanitized = sanitize_sql_like(q)
-      where("tsdoc @@ plainto_tsquery(?)", sanitized)
-        .order(Arel.sql("ts_rank(tsdoc, plainto_tsquery('#{sanitized}')) DESC"))
-    }
+    normalizes :nip, with: ->(n) { n.to_s[0, 10] }
 
     private
-
-    def truncate_nip_to_10_chars
-      self.nip = nip.to_s[0, 10] if nip.present?
-    end
 
     def only_to_review_can_be_approved
       if self.id.present? && self.approved? && self.status_was != "to_review"

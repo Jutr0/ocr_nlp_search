@@ -5,7 +5,7 @@ module Users
     include_examples 'basic_seed'
 
     describe 'GET #me' do
-      include_examples 'an signed-only endpoint', :get, :me
+      include_examples 'an signed-only endpoint', method: :get, action: :me
 
       it 'return currently signed user data' do
         sign_in user

@@ -45,7 +45,7 @@ module Documents
 
       context "processing.nlp.succeeded" do
         it "sets status to to_review and updates extracted fields" do
-          extracted = { "category" => "Invoice", "company_name" => "Acme Co" }
+          extracted = { "category" => "utilities_and_subscriptions", "company_name" => "Acme Co" }
           msg = make_message("processing.nlp.succeeded",
                              document_id: pending_document.id,
                              extracted_fields: extracted)
@@ -55,7 +55,7 @@ module Documents
           pending_document.reload
 
           expect(pending_document.status).to eq("to_review")
-          expect(pending_document.category).to eq("Invoice")
+          expect(pending_document.category).to eq("utilities_and_subscriptions")
           expect(pending_document.company_name).to eq("Acme Co")
         end
       end

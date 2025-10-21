@@ -5,7 +5,7 @@ module Users
     include_examples 'basic_seed'
 
     describe 'GET #index' do
-      include_examples 'an superadmin-only endpoint', :get, :index
+      include_examples 'an superadmin-only endpoint', method: :get, action: :index
 
       it 'returns list of users when superadmin signed in' do
         sign_in superadmin
@@ -26,7 +26,7 @@ module Users
     end
 
     describe 'GET #show' do
-      include_examples 'an superadmin-only endpoint', :get, :show, -> { { id: user.id } }
+      include_examples 'an superadmin-only endpoint', method: :get, action: :show, params_proc: -> { { id: user.id } }
 
       it 'returns user data when superadmin signed in' do
         sign_in superadmin
@@ -55,7 +55,7 @@ module Users
         }
       end
 
-      include_examples 'an superadmin-only endpoint', :post, :create, -> { { user: user_params } }
+      include_examples 'an superadmin-only endpoint', method: :post, action: :create, params_proc: -> { { user: user_params } }
 
       it 'creates a new user when superadmin signed in' do
         sign_in superadmin
@@ -80,9 +80,9 @@ module Users
       let(:update_params) { { email: 'updated@example.com' } }
 
       include_examples 'an superadmin-only endpoint',
-                       :patch,
-                       :update,
-                       -> { { id: user.id, user: update_params } }
+                       method: :patch,
+                       action: :update,
+                       params_proc: -> { { id: user.id, user: update_params } }
 
       it 'updates user when superadmin signed in' do
         sign_in superadmin
@@ -102,7 +102,7 @@ module Users
     end
 
     describe 'DELETE #destroy' do
-      include_examples 'an superadmin-only endpoint', :delete, :destroy, -> { { id: user.id } }
+      include_examples 'an superadmin-only endpoint', method: :delete, action: :destroy, params_proc: -> { { id: user.id } }
 
       it 'destroys user when superadmin signed in' do
         sign_in superadmin

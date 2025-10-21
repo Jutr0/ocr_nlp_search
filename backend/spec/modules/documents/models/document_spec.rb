@@ -67,8 +67,8 @@ module Documents
 
     end
 
-    describe 'callbacks' do
-      it 'truncates nip to 10 characters before validation' do
+    describe 'normalizers' do
+      it 'truncates nip to 10 characters' do
         long_nip = '123456789012345'
         doc = Document.new(user: user, nip: long_nip)
         doc.file.attach(file)

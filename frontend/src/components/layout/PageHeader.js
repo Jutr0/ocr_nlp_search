@@ -1,4 +1,4 @@
-import {Box, Tab, Tabs, Typography, Breadcrumbs, Link} from '@mui/material';
+import {Box, Breadcrumbs, Link, Tab, Tabs, Typography} from '@mui/material';
 import './PageHeader.scss';
 import {useNavigate} from "react-router-dom";
 
@@ -17,7 +17,7 @@ const PageHeader = ({icon, tabs, onTabChange, activeTab, buttons, breadcrumbs = 
         <Box className="page-header">
             <Box className="title">
                 {icon}
-                <Breadcrumbs separator=">" >
+                <Breadcrumbs separator=">">
                     {breadcrumbs.map((crumb, index) => {
                         const isLast = index === breadcrumbs.length - 1;
 
@@ -61,7 +61,7 @@ const PageHeader = ({icon, tabs, onTabChange, activeTab, buttons, breadcrumbs = 
                 textColor="primary"
                 indicatorColor="primary"
             >
-                {tabs.map(tab => <Tab label={tab.label} className="tab" value={tab.value}/>)}
+                {tabs.map(tab => <Tab key={tab.label} label={tab.label} className="tab" value={tab.value}/>)}
             </Tabs>}
             <Box className='buttons'>
                 {buttons && buttons}

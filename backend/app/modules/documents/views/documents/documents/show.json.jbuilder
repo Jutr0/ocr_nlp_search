@@ -5,3 +5,7 @@ json.file do
   json.filename @document.filename
   json.type @document.file.content_type
 end
+
+json.history_logs @document.history_logs do |history_log|
+  json.extract! history_log, :created_at, :action
+end
