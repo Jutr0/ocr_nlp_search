@@ -3,7 +3,11 @@ module Documents
     include Interactor
 
     def call
-      DocumentHistoryLog.create(document: context.document, action: context.action)
+      document_history_log = DocumentHistoryLog.create(document: context.document, action: context.action)
+
+      unless document_history_log
+        context.fail!(errors: document_history_log.errors)
+      end
     end
   end
 end
