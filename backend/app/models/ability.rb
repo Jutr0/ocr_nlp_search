@@ -6,8 +6,10 @@ class Ability
   def initialize(user)
     user ||= Users::User.new(role: 'guest')
 
-    Users::Abilities.define(self, user)
-    Documents::Abilities.define(self, user)
-
+    if user.user?
+      can :manage, Document, user_id: user.id
+    elsif user.superadmin?
+      can :manage, User
+    end
   end
 end
