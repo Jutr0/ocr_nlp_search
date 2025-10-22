@@ -1,17 +1,16 @@
 class ChangeDocumentStatus
   include Interactor
   include DocumentHistoryLogging
+  include Transactional
 
   def call
-    ActiveRecord::Base.transaction do
-      updated_document = context.document.update(status: status_from_action(context.action))
+    updated_document = context.document.update(status: status_from_action(context.action))
 
-      unless updated_document.valid?
-        context.fail!(errors: { message: updated_document.errors.full_messages.join(", "), status: :unprocessable_entity })
-      end
-
-      log_document_history(updated_document, context.action)
+    unless updated_document.valid?
+      context.fail!(error: { message: updated_document.errors.full_messages.join(", "), status: :unprocessable_entity })
     end
+
+    log_document_history(updated_document, context.action)
   end
 
   private

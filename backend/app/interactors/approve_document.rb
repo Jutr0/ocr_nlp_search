@@ -1,6 +1,8 @@
 class ApproveDocument
   include Interactor
   include DocumentHistoryLogging
+  include Transactional
+
   def call
     unless context.document.to_review?
       context.fail!(

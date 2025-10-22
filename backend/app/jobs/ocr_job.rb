@@ -15,7 +15,7 @@ class OcrJob < ApplicationJob
     tempfile.rewind
     file_path = tempfile.path
 
-    ChangeDocumentStatus.call(document, action: :ocr_started)
+    ChangeDocumentStatus.call!(document:, action: :ocr_started)
 
     extracted_text = if document.content_type == 'application/pdf'
                        extract_text_from_pdf(file_path)
@@ -24,12 +24,12 @@ class OcrJob < ApplicationJob
                      end
     document.text_ocr = extracted_text.strip
 
-    ChangeDocumentStatus.call(document, action: :ocr_succeeded)
+    CompleteDocumentOcr.call!(document:, text_ocr: extracted_text.strip)
 
     NlpJob.perform_later(document.to_h.slice(:text_ocr, :document_id))
   rescue => e
     Rails.logger.error "[OCRJob] Error on Document #{document.document_id}: #{e.message}"
-    ChangeDocumentStatus.call(document, action: :ocr_failed)
+    ChangeDocumentStatus.call(document:, action: :ocr_failed)
     raise e
   end
 

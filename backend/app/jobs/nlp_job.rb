@@ -10,12 +10,12 @@ class NlpJob < ApplicationJob
     document = StructUtils.deep_ostruct(document)
     return unless document&.text_ocr.present?
 
-    ChangeDocumentStatus.call(document, action: :nlp_started)
+    ChangeDocumentStatus.call!(document:, action: :nlp_started)
 
     result = analyze_with_llm(document.text_ocr)
     parsed = extract_json_from_response(result)
 
-    document.extracted_fields = {
+    extracted_data = {
       doc_type: parsed["document_type"],
       net_amount: extract_decimal(parsed["net_amount"]),
       gross_amount: extract_decimal(parsed["gross_amount"]),
@@ -27,10 +27,10 @@ class NlpJob < ApplicationJob
       nip: parsed["nip"]
     }
 
-    ChangeDocumentStatus.call(document, action: :nlp_succeeded)
+    CompleteDocumentNlp.call!(document:, extracted_data:)
   rescue => e
     Rails.logger.error "[NlpJob] Error for Document #{document.document_id}: #{e.message}"
-    ChangeDocumentStatus.call(document, action: :nlp_failed)
+    ChangeDocumentStatus.call(document:, action: :nlp_failed)
     raise e
   end
 
