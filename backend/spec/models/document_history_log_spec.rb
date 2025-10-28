@@ -10,7 +10,7 @@ RSpec.describe DocumentHistoryLog, type: :model do
 
   describe 'enums' do
     it do
-      is_expected.to define_enum_for(:action).
+      expect(subject).to define_enum_for(:action).
         with_values(
           created: "created",
           ocr_started: "ocr_started",

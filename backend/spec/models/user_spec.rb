@@ -5,7 +5,7 @@ RSpec.describe User, type: :model do
 
   describe 'enums' do
     it do
-      is_expected.to define_enum_for(:role).
+      expect(subject).to define_enum_for(:role).
         with_values(user: 'user', superadmin: 'superadmin', guest: 'guest').
         backed_by_column_of_type(:string).
         with_default(:user)

@@ -2,9 +2,10 @@ require 'rails_helper'
 require 'seeds/documents_seed'
 
 RSpec.describe ApproveDocument, type: :interactor do
+  subject(:context) { described_class.call(document: to_review_document) }
+
   include_examples "documents_seed"
 
-  subject(:context) { described_class.call(document: to_review_document) }
 
   it 'succeeds' do
     expect(context).to be_success

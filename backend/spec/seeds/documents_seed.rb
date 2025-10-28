@@ -9,7 +9,7 @@
     let(:another_user_document) { Document.find_by(status: :pending, user: another_user) }
     let(:another_user_to_review_document) { Document.find_by(status: :to_review, user: another_user) }
 
-    before(:each) do
+    before do
       populate_documents
     end
 

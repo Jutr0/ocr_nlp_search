@@ -2,13 +2,16 @@ require 'rails_helper'
 require 'seeds/documents_seed'
 
 RSpec.describe RejectDocument, type: :interactor do
-  include_examples "documents_seed"
-
   subject(:context) { described_class.call(document: to_review_document) }
 
-  before(:each) do
+  before do
     allow(DocumentOcrRefreshEvent).to receive(:call).and_return(true)
   end
+
+  include_examples "documents_seed"
+
+
+
   it 'succeeds' do
     expect(context).to be_success
   end

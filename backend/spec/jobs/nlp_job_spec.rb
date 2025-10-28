@@ -33,7 +33,7 @@ RSpec.describe NlpJob, type: :job do
       it 'does nothing' do
         expect(NlpStartedEvent).not_to receive(:call)
         expect(OpenAI::Client).not_to receive(:new)
-        NlpJob.perform_now(document_hash)
+        described_class.perform_now(document_hash)
       end
     end
 
@@ -57,7 +57,7 @@ RSpec.describe NlpJob, type: :job do
       it 'calls started, succeeds, and populates extracted_fields properly' do
         expect(NlpStartedEvent).to receive(:call).with(instance_of(OpenStruct))
 
-        NlpJob.perform_now(document_hash)
+        described_class.perform_now(document_hash)
 
         succeeded_struct = nil
         expect(NlpSucceededEvent).to have_received(:call) do |doc_struct|
@@ -91,7 +91,7 @@ RSpec.describe NlpJob, type: :job do
           hash_including(message: "boom")
         )
 
-        expect { NlpJob.perform_now(document_hash) }.to raise_error(StandardError, "boom")
+        expect { described_class.perform_now(document_hash) }.to raise_error(StandardError, "boom")
       end
     end
   end

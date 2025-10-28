@@ -88,6 +88,7 @@ RSpec.describe DocumentsController, type: :controller do
       json = JSON.parse(response.body)
       expect(json['status']).to eq('pending')
     end
+
     it 'publish document created event' do
       sign_in user
 
@@ -150,6 +151,7 @@ RSpec.describe DocumentsController, type: :controller do
       expect(response).to have_http_status(:unauthorized)
     end
   end
+
   describe 'GET #refresh_nlp' do
     include_examples 'an user-only endpoint',
                      method: :get,

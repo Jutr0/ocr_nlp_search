@@ -34,7 +34,7 @@ RSpec.describe OcrJob, type: :job do
       it 'does nothing' do
         dh = document_hash.merge(file_url: nil)
         expect(OcrStartedEvent).not_to receive(:call)
-        OcrJob.perform_now(dh)
+        described_class.perform_now(dh)
       end
     end
 
@@ -49,7 +49,7 @@ RSpec.describe OcrJob, type: :job do
         expect(OcrStartedEvent).to receive(:call).with(instance_of(OpenStruct))
         expect(OcrSucceededEvent).to receive(:call).with(instance_of(OpenStruct))
 
-        OcrJob.perform_now(document_hash)
+        described_class.perform_now(document_hash)
 
         expect(NlpJob).to have_received(:perform_later).with(
           hash_including(text_ocr: pdf_text, document_id: document_hash[:document_id])
@@ -75,7 +75,7 @@ RSpec.describe OcrJob, type: :job do
         expect(OcrStartedEvent).to receive(:call)
         expect(OcrSucceededEvent).to receive(:call)
 
-        OcrJob.perform_now(document_hash)
+        described_class.perform_now(document_hash)
 
         expect(NlpJob).to have_received(:perform_later).with(
           hash_including(text_ocr: "ONE\n---\nTWO", document_id: document_hash[:document_id])
@@ -94,7 +94,7 @@ RSpec.describe OcrJob, type: :job do
         expect(OcrStartedEvent).to receive(:call)
         expect(OcrSucceededEvent).to receive(:call)
 
-        OcrJob.perform_now(document_hash.merge(content_type: 'image/png'))
+        described_class.perform_now(document_hash.merge(content_type: 'image/png'))
 
         expect(NlpJob).to have_received(:perform_later).with(
           hash_including(text_ocr: ocr_text.strip, document_id: document_hash[:document_id])
@@ -115,7 +115,7 @@ RSpec.describe OcrJob, type: :job do
         )
 
         expect {
-          OcrJob.perform_now(document_hash)
+          described_class.perform_now(document_hash)
         }.to raise_error(StandardError, "boom")
       end
     end

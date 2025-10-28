@@ -13,7 +13,7 @@ RSpec.describe Document, type: :model do
 
   describe 'enums' do
     it do
-      is_expected.to define_enum_for(:status).
+      expect(subject).to define_enum_for(:status).
         with_values(
           pending: 'pending',
           ocr_processing: 'ocr_processing',
@@ -34,14 +34,14 @@ RSpec.describe Document, type: :model do
     it { is_expected.to validate_presence_of(:file) }
 
     it 'is invalid with disallowed content type' do
-      doc = Document.new(user: user)
+      doc = described_class.new(user: user)
       doc.file.attach(invalid_file)
       expect(doc).not_to be_valid
       expect(doc.errors[:file]).to include("has an invalid content type (authorized content types are PDF, PNG, JPG)")
     end
 
     it 'is valid with an allowed content type' do
-      doc = Document.new(user: user)
+      doc = described_class.new(user: user)
       doc.file.attach(file)
       expect(doc).to be_valid
     end
@@ -55,11 +55,11 @@ RSpec.describe Document, type: :model do
         "nlp_processing",
         "nlp_retrying"
       ].each do |status|
-        document = Document.create!(user: user, status: status, file: file)
+        document = described_class.create!(user: user, status: status, file: file)
         expect { document.update!(status: 'approved') }.to raise_error(ActiveRecord::RecordInvalid, 'Validation failed: Status can only be changed to approved when it is in the to_review state')
       end
 
-      document = Document.create!(user: user, status: "to_review", file: file)
+      document = described_class.create!(user: user, status: "to_review", file: file)
       expect { document.update!(status: 'approved') }.not_to raise_error
       expect(document).to be_approved
     end
@@ -68,7 +68,7 @@ RSpec.describe Document, type: :model do
   describe 'normalizers' do
     it 'truncates nip to 10 characters' do
       long_nip = '123456789012345'
-      doc = Document.new(user: user, nip: long_nip)
+      doc = described_class.new(user: user, nip: long_nip)
       doc.file.attach(file)
       doc.valid?
       expect(doc.nip).to eq(long_nip[0, 10])

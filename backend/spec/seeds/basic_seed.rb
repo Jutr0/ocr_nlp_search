@@ -1,11 +1,11 @@
 DEFAULT_PASSWORD = 'password123'.freeze
 
-RSpec.shared_examples "basic_seed" do
+RSpec.shared_context "basic_seed" do
   let(:superadmin) { User.find_by(role: :superadmin) }
   let(:user) { User.find_by(email: 'user@example.com') }
   let(:another_user) { User.find_by(email: 'another@example.com') }
 
-  before(:each) do
+  before do
     populate_users
   end
 
