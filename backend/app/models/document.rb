@@ -37,7 +37,6 @@
 #  fk_rails_...  (user_id => users.id)
 
 class Document < ApplicationRecord
-
   enum :status, {
     pending: "pending",
     ocr_processing: "ocr_processing",

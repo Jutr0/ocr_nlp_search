@@ -49,5 +49,4 @@
     def document_params
       params.permit(:file)
     end
-
   end

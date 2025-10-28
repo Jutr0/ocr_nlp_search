@@ -14,7 +14,7 @@ gem "cancancan"
 gem "jbuilder"
 gem "sidekiq"
 gem "rack-cors"
-gem "dotenv-rails", groups: [:development, :test]
+gem "dotenv-rails", groups: [ :development, :test ]
 gem "annotaterb"
 gem "interactor"
 gem "interactor-rails"
@@ -25,7 +25,7 @@ gem "activestorage"
 gem "rtesseract"
 gem "mini_magick"
 gem "pdf-reader"
-gem 'ruby-openai'
+gem "ruby-openai"
 gem "tzinfo-data", platforms: %i[windows jruby]
 
 group :development, :test do
@@ -38,6 +38,6 @@ group :development, :test do
 end
 
 group :test do
-  gem 'database_cleaner-active_record', '~> 2.1'
-  gem 'simplecov', require: false
+  gem "database_cleaner-active_record", "~> 2.1"
+  gem "simplecov", require: false
 end

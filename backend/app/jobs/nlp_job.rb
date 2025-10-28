@@ -1,13 +1,11 @@
-require 'net/http'
-require 'json'
-require 'openai'
+require "net/http"
+require "json"
+require "openai"
 
 class NlpJob < ApplicationJob
   queue_as :default
 
   def perform(document)
-
-    document = StructUtils.deep_ostruct(document)
     return unless document&.text_ocr.present?
 
     ChangeDocumentStatus.call!(document:, action: :nlp_started)
@@ -29,7 +27,7 @@ class NlpJob < ApplicationJob
 
     CompleteDocumentNlp.call!(document:, extracted_data:)
   rescue => e
-    Rails.logger.error "[NlpJob] Error for Document #{document.document_id}: #{e.message}"
+    Rails.logger.error "[NlpJob] Error for Document #{document.id}: #{e.message}"
     ChangeDocumentStatus.call(document:, action: :nlp_failed)
     raise e
   end
@@ -82,8 +80,8 @@ class NlpJob < ApplicationJob
   end
 
   def extract_json_from_response(response_text)
-    json_start = response_text.index('{')
-    json_end = response_text.rindex('}')
+    json_start = response_text.index("{")
+    json_end = response_text.rindex("}")
     raise "No JSON found in response" unless json_start && json_end
 
     json_str = response_text[json_start..json_end]

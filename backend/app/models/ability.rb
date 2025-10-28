@@ -4,7 +4,7 @@ class Ability
   include CanCan::Ability
 
   def initialize(user)
-    user ||= Users::User.new(role: 'guest')
+    user ||= User.new(role: "guest")
 
     if user.user?
       can :manage, Document, user_id: user.id

@@ -1,4 +1,3 @@
-module Documents
   RSpec.shared_examples 'documents_seed' do
     include_examples 'basic_seed'
 
@@ -17,7 +16,6 @@ module Documents
     private
 
     def populate_documents
-
       document_extracted_params = {
         doc_type: "invoice", gross_amount: 10_000, net_amount: 9_000, category: "office_supplies"
       }
@@ -31,6 +29,5 @@ module Documents
       ].each do |attrs|
         Document.create!({ file:, filename: 'dummy.pdf', **attrs })
       end
-    end
   end
 end

@@ -1,34 +1,33 @@
-require 'rtesseract'
-require 'mini_magick'
-require 'pdf/reader'
+require "rtesseract"
+require "mini_magick"
+require "pdf/reader"
 
 class OcrJob < ApplicationJob
   queue_as :default
 
   def perform(document)
-    document = StructUtils.deep_ostruct(document)
-    return unless document&.file_url.present?
+    return unless document&.file&.attached?
 
-    tempfile = Tempfile.new(['doc', File.extname(document.filename)])
+    tempfile = Tempfile.new([ "doc", File.extname(document.filename) ])
     tempfile.binmode
-    tempfile.write URI.open(document.file_url).read
+    tempfile.write URI.open(document.file.url).read
     tempfile.rewind
     file_path = tempfile.path
 
     ChangeDocumentStatus.call!(document:, action: :ocr_started)
 
-    extracted_text = if document.content_type == 'application/pdf'
-                       extract_text_from_pdf(file_path)
-                     else
-                       extract_text_from_image(file_path)
-                     end
+    extracted_text = if document.content_type == "application/pdf"
+      extract_text_from_pdf(file_path)
+    else
+      extract_text_from_image(file_path)
+    end
     document.text_ocr = extracted_text.strip
 
     CompleteDocumentOcr.call!(document:, text_ocr: extracted_text.strip)
 
-    NlpJob.perform_later(document.to_h.slice(:text_ocr, :document_id))
+    NlpJob.perform_later(document)
   rescue => e
-    Rails.logger.error "[OCRJob] Error on Document #{document.document_id}: #{e.message}"
+    Rails.logger.error "[OCRJob] Error on Document #{document.id}: #{e.message}"
     ChangeDocumentStatus.call(document:, action: :ocr_failed)
     raise e
   end
@@ -44,7 +43,7 @@ class OcrJob < ApplicationJob
     image.sharpen("0x1.0")
     image.normalize
     image.despeckle
-    RTesseract.new(image.path, lang: 'pol', psm: 6, processor: 'hocr').to_s
+    RTesseract.new(image.path, lang: "pol", psm: 6, processor: "hocr").to_s
   end
 
   def extract_text_from_pdf(path)
@@ -58,11 +57,10 @@ class OcrJob < ApplicationJob
   end
 
   def convert_pdf_to_images(pdf_path)
-
     MiniMagick::Tool::Convert.new do |convert|
       convert.density(300)
-      convert.background('white')
-      convert.alpha('remove')
+      convert.background("white")
+      convert.alpha("remove")
       convert << pdf_path
       convert << "#{pdf_path}-%03d.png"
     end

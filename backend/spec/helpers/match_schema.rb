@@ -6,7 +6,6 @@ GREEN = "\e[32m"
 RESET = "\e[0m"
 
 RSpec::Matchers.define :match_schema do |schema_name|
-
   match do |actual_body|
     schema_path = get_spec_response_path(schema_name)
 
@@ -46,7 +45,7 @@ RSpec::Matchers.define :match_schema do |schema_name|
 
       @diffs.each do |diff|
         if runs.empty? || diff[:line] != runs.last.last[:line] + 1
-          runs << [diff]
+          runs << [ diff ]
         else
           runs.last << diff
         end
@@ -66,7 +65,5 @@ RSpec::Matchers.define :match_schema do |schema_name|
       .gsub(/"url"\s*:\s*"[^"]*"/, '"url": "HIDDEN"')
       .gsub(/"([A-Za-z0-9_]+_id)"\s*:\s*"[^"]*"/, '"\1": "HIDDEN"')
       .gsub(/"([A-Za-z0-9_]+_url)"\s*:\s*"[^"]*"/, '"\1": "HIDDEN"')
-
   end
 end
-

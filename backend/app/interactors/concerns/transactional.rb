@@ -1,5 +1,5 @@
 module Transactional
-  include ActiveSupport::Concern
+  extend ActiveSupport::Concern
 
   included do
     around do |interactor|

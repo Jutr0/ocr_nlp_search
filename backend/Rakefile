@@ -6,5 +6,5 @@ require_relative "config/application"
 Rails.application.load_tasks
 
 Rake::Task["db:migrate"].enhance do
-  system("bundle exec annotaterb models --model-dir app/models,app/modules/documents/models/documents,app/modules/users/models/users")
+  system("bundle exec annotaterb models --model-dir app/models")
 end

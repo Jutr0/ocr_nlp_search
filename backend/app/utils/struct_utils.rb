@@ -10,6 +10,5 @@ module StructUtils
         obj
       end
     end
-
   end
 end

@@ -1,17 +1,18 @@
-Rails.application.routes.draw do
-  scope '/api' do
-    devise_for :users,
-               path: 'users',
-               class_name: 'Users::User',
-               controllers: {
-                 sessions: 'users/sessions',
-                 registrations: 'users/registrations'
-               }
-    resources :users, except: [:create], controller: 'users/users'
-    post 'users/create', to: 'users/users#create'
-    get '/profile/me', to: 'users/profile#me'
+require "sidekiq/web"
 
-    resources :documents, controller: 'documents/documents' do
+Rails.application.routes.draw do
+  scope "/api" do
+    mount Sidekiq::Web => "/sidekiq"
+    devise_for :users,
+               controllers: {
+                 sessions: "users/sessions",
+                 registrations: "users/registrations"
+               }
+    resources :users, except: [ :create ], controller: "users"
+    post "users/create", to: "users#create"
+    get "/profile/me", to: "profile#me"
+
+    resources :documents, controller: "documents" do
       collection do
         get :to_review
       end
