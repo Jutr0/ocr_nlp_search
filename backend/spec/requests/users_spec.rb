@@ -1,36 +1,40 @@
 require 'rails_helper'
 
-RSpec.describe UsersController, type: :controller do
-  include Devise::Test::ControllerHelpers
+RSpec.describe "Users", type: :request do
   include_examples 'basic_seed'
 
-  describe 'GET #index' do
-    include_examples 'an superadmin-only endpoint', method: :get, action: :index
+  let(:headers) { { 'ACCEPT' => 'application/json' } }
+
+  describe 'GET /users' do
+    include_examples 'a superadmin-only endpoint', method: :get, path: '/users'
 
     it 'returns list of users when superadmin signed in' do
       sign_in superadmin
-      get :index, format: :json
+      get '/users', headers: headers
 
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
       expect(json).to be_an(Array)
+
       emails = json.map { |u| u['email'] }
       expect(emails).to include(superadmin.email, user.email)
     end
 
-    it 'renders the expected fields for each user' do
+    it 'matches the expected fields for each user' do
       sign_in superadmin
-      get :index, format: :json
+      get '/users', headers: headers
       expect(response.body).to match_schema('users')
     end
   end
 
-  describe 'GET #show' do
-    include_examples 'an superadmin-only endpoint', method: :get, action: :show, params_proc: -> { { id: user.id } }
+  describe 'GET /users/:id' do
+    include_examples 'a superadmin-only endpoint',
+                     method: :get,
+                     path_proc: -> { "/users/#{user.id}" }
 
     it 'returns user data when superadmin signed in' do
       sign_in superadmin
-      get :show, params: { id: user.id }, format: :json
+      get "/users/#{user.id}", headers: headers
 
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
@@ -38,14 +42,14 @@ RSpec.describe UsersController, type: :controller do
       expect(json['email']).to eq(user.email)
     end
 
-    it 'renders the expected fields for user' do
+    it 'matches the expected fields for user' do
       sign_in superadmin
-      get :show, params: { id: user.id }, format: :json
+      get "/users/#{user.id}", headers: headers
       expect(response.body).to match_schema('user')
     end
   end
 
-  describe 'POST #create' do
+  describe 'POST /users' do
     let(:user_params) do
       {
         email: 'new@example.com',
@@ -55,12 +59,16 @@ RSpec.describe UsersController, type: :controller do
       }
     end
 
-    include_examples 'an superadmin-only endpoint', method: :post, action: :create, params_proc: -> { { user: user_params } }
+    include_examples 'a superadmin-only endpoint',
+                     method: :post,
+                     path: '/users',
+                     params_proc: -> { { user: user_params } }
 
     it 'creates a new user when superadmin signed in' do
       sign_in superadmin
+
       expect {
-        post :create, params: { user: user_params }, format: :json
+        post '/users', params: { user: user_params }, headers: headers
       }.to change(User, :count).by(1)
 
       expect(response).to have_http_status(:created)
@@ -69,45 +77,49 @@ RSpec.describe UsersController, type: :controller do
       expect(json['role']).to eq('user')
     end
 
-    it 'renders the expected fields for created user' do
+    it 'matches the expected fields for created user' do
       sign_in superadmin
-      post :create, params: { user: user_params }, format: :json
+      post '/users', params: { user: user_params }, headers: headers
       expect(response.body).to match_schema('created_user')
     end
   end
 
-  describe 'PATCH #update' do
+  describe 'PATCH /users/:id' do
     let(:update_params) { { email: 'updated@example.com' } }
 
-    include_examples 'an superadmin-only endpoint',
+    include_examples 'a superadmin-only endpoint',
                      method: :patch,
-                     action: :update,
-                     params_proc: -> { { id: user.id, user: update_params } }
+                     path_proc: -> { "/users/#{user.id}" },
+                     params_proc: -> { { user: update_params } }
 
     it 'updates user when superadmin signed in' do
       sign_in superadmin
-      patch :update, params: { id: user.id, user: update_params }, format: :json
+      patch "/users/#{user.id}", params: { user: update_params }, headers: headers
 
       expect(response).to have_http_status(:ok)
       expect(user.reload.email).to eq('updated@example.com')
+
       json = JSON.parse(response.body)
       expect(json['email']).to eq('updated@example.com')
     end
 
-    it 'renders the expected fields for updated user' do
+    it 'matches the expected fields for updated user' do
       sign_in superadmin
-      patch :update, params: { id: user.id, user: update_params }, format: :json
+      patch "/users/#{user.id}", params: { user: update_params }, headers: headers
       expect(response.body).to match_schema('updated_user')
     end
   end
 
-  describe 'DELETE #destroy' do
-    include_examples 'an superadmin-only endpoint', method: :delete, action: :destroy, params_proc: -> { { id: user.id } }
+  describe 'DELETE /users/:id' do
+    include_examples 'a superadmin-only endpoint',
+                     method: :delete,
+                     path_proc: -> { "/users/#{user.id}" }
 
     it 'destroys user when superadmin signed in' do
       sign_in superadmin
+
       expect {
-        delete :destroy, params: { id: user.id }, format: :json
+        delete "/users/#{user.id}", headers: headers
       }.to change(User, :count).by(-1)
 
       expect(response).to have_http_status(:no_content)
