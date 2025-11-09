@@ -1,3 +1,39 @@
+# == Schema Information
+#
+# Table name: documents
+#
+#  id             :uuid             not null, primary key
+#  category       :string
+#  company_name   :string
+#  content_type   :string
+#  currency       :string(3)
+#  doc_type       :string
+#  filename       :string
+#  gross_amount   :decimal(15, 2)
+#  invoice_number :string
+#  issue_date     :date
+#  net_amount     :decimal(15, 2)
+#  nip            :string(10)
+#  processed_at   :datetime
+#  status         :string           default("pending"), not null
+#  text_ocr       :text
+#  tsdoc          :tsvector
+#  created_at     :datetime         not null
+#  updated_at     :datetime         not null
+#  user_id        :uuid             not null
+#
+# Indexes
+#
+#  index_documents_on_created_at  (created_at)
+#  index_documents_on_doc_type    (doc_type)
+#  index_documents_on_status      (status)
+#  index_documents_on_tsdoc       (tsdoc) USING gin
+#  index_documents_on_user_id     (user_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (user_id => users.id)
+#
 require 'rails_helper'
 require 'seeds/documents_seed'
 

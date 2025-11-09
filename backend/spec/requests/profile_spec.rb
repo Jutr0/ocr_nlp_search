@@ -5,12 +5,13 @@ RSpec.describe "Profile", type: :request do
 
   include_examples 'basic_seed'
 
-  describe 'GET /profile/me' do
-    include_examples 'an signed-only endpoint', method: :get, path: '/profile/me'
-    context 'when user is signed in' do
+  describe 'GET api/profile/me' do
+    include_examples 'a signed-only endpoint', method: :get, path: '/api/profile/me'
+
+    context 'when signed in as user' do
       before do
         sign_in user
-        get '/profile/me', headers: headers
+        get '/api/profile/me', headers: headers
       end
 
       it 'returns a 200 status' do

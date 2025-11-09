@@ -2,11 +2,11 @@
 #
 # Table name: document_history_logs
 #
-#  id             :uuid             not null, primary key
-#  action         :string           not null
-#  created_at     :datetime         not null
-#  updated_at     :datetime         not null
-#  document_id    :uuid             not null
+#  id          :uuid             not null, primary key
+#  action      :string           not null
+#  created_at  :datetime         not null
+#  updated_at  :datetime         not null
+#  document_id :uuid             not null
 #
 # Indexes
 #

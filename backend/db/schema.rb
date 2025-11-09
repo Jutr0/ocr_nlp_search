@@ -15,7 +15,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_10_161439) do
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
   enable_extension "unaccent"
-  enable_extension "vector"
 
   create_table "active_storage_attachments", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "name", null: false
@@ -47,8 +46,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_10_161439) do
 
   create_table "document_history_logs", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "action", null: false
-    t.string "previous_state"
-    t.string "current_state"
     t.uuid "document_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
