@@ -2,7 +2,7 @@
 
 class KarafkaApp < Karafka::App
   setup do |config|
-    config.kafka = { 'bootstrap.servers': '127.0.0.1:9092' }
+    config.kafka = { 'bootstrap.servers': Rails.configuration.kafka_bootstrap_servers }
     config.client_id = 'ocr_nlp_search'
     config.group_id = 'ocr_nlp_search_consumer'
     config.consumer_persistence = !Rails.env.development?

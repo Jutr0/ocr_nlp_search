@@ -10,7 +10,7 @@ module Processing
     private
 
     def process_event(payload)
-      handle_event(payload.event, payload.data)
+      handle_event(payload.event, payload.data.to_h)
     end
 
     def handle_event(event, data)

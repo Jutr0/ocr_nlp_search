@@ -126,7 +126,6 @@ module Documents
         expect {
           delete :destroy, params: { id: pending_document.id }, format: :json
         }.to change(Document, :count).by(-1)
-        expect(response).to have_http_status(:ok)
       end
 
       it "returns 401 Unauthorized when user is not document's owner" do

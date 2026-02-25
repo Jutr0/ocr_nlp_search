@@ -27,8 +27,13 @@ module Backend
     config.frontend_url = ENV.fetch('FRONTEND_URL', 'http://localhost:3000')
     config.backend_url = ENV.fetch("BACKEND_URL", 'http://localhost:4000')
     config.open_ai_api_key = ENV.fetch("OPEN_AI_API_KEY", '')
+    config.kafka_bootstrap_servers = ENV.fetch("KAFKA_BOOTSTRAP_SERVERS", 'localhost:9092')
+    
     config.active_job.queue_adapter = :sidekiq
+    config.session_store :cookie_store, key: ENV.fetch("SESSION_STORE", 'session_store')
+    config.middleware.use ActionDispatch::Cookies
 
+    config.middleware.use config.session_store, config.session_options
     Rails.application.routes.default_url_options[:host] = config.backend_url
 
     config.generators do |g|

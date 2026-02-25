@@ -9,10 +9,6 @@ module Documents
 
     private
 
-    def parse_payload(message)
-      JSON.parse(message.raw_payload, object_class: OpenStruct)
-    end
-
     def process_event(payload)
       document = Document.find_by(id: payload.data.document_id)
       return unless document

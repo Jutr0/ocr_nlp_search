@@ -9,7 +9,7 @@ module Processing
     end
 
     def make_message(event)
-      payload = { event: event, data: "some data" }.to_json
+      payload = { event: event, data: { data: "some data" } }.to_json
       double("message", raw_payload: payload)
     end
 
@@ -18,7 +18,7 @@ module Processing
         msg = make_message("documents.created")
         allow(consumer).to receive(:messages).and_return([msg])
 
-        expect(OcrJob).to receive(:perform_later).with("some data")
+        expect(OcrJob).to receive(:perform_later).with({ data: "some data" })
         expect(NlpJob).not_to receive(:perform_later)
         consumer.consume
       end
@@ -27,7 +27,7 @@ module Processing
         msg = make_message("documents.ocr.refresh")
         allow(consumer).to receive(:messages).and_return([msg])
 
-        expect(OcrJob).to receive(:perform_later).with("some data")
+        expect(OcrJob).to receive(:perform_later).with({ data: "some data" })
         expect(NlpJob).not_to receive(:perform_later)
         consumer.consume
       end
@@ -37,7 +37,7 @@ module Processing
         msg = make_message("documents.nlp.refresh")
         allow(consumer).to receive(:messages).and_return([msg])
 
-        expect(NlpJob).to receive(:perform_later).with("some data")
+        expect(NlpJob).to receive(:perform_later).with({ data: "some data" })
         expect(OcrJob).not_to receive(:perform_later)
         consumer.consume
       end
