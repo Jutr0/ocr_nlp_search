@@ -5,7 +5,7 @@ RSpec.describe RejectDocument, type: :interactor do
   subject(:context) { described_class.call(document: to_review_document) }
 
   before do
-    allow(DocumentOcrRefreshEvent).to receive(:call).and_return(true)
+    allow(OcrJob).to receive(:perform_later)
   end
 
   include_examples "documents_seed"

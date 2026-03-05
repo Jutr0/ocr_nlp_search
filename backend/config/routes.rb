@@ -5,11 +5,9 @@ Rails.application.routes.draw do
     mount Sidekiq::Web => "/sidekiq"
     devise_for :users,
                controllers: {
-                 sessions: "users/sessions",
-                 registrations: "users/registrations"
+                 sessions: "users/sessions"
                }
-    resources :users, except: [ :create ], controller: "users"
-    post "users/create", to: "users#create"
+    resources :users, controller: "users"
     get "/profile/me", to: "profile#me"
 
     resources :documents, controller: "documents" do
