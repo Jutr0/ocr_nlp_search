@@ -1,25 +1,17 @@
 require 'rails_helper'
+require 'seeds/documents_seed'
 
 RSpec.describe OcrJob, type: :job do
   include ActiveJob::TestHelper
+  include_examples 'documents_seed'
 
-  let(:document_hash) do
-    {
-      document_id: SecureRandom.uuid,
-      file_url: 'http://example.com/foo.pdf',
-      filename: 'foo.pdf',
-      content_type: content_type
-    }
-  end
+  let(:document) { pending_document }
 
   before do
-    allow(OcrStartedEvent).to receive(:call)
-    allow(OcrSucceededEvent).to receive(:call)
-    allow(OcrFailedEvent).to receive(:call)
+    allow(ChangeDocumentStatus).to receive(:call!)
+    allow(CompleteDocumentOcr).to receive(:call!)
     allow(NlpJob).to receive(:perform_later)
-
-    fake_file = StringIO.new("PDFDATA")
-    allow(URI).to receive(:open).with(document_hash[:file_url]).and_return(fake_file)
+    allow(URI).to receive(:open).and_return(StringIO.new("PDFDATA"))
   end
 
   after do
@@ -28,94 +20,81 @@ RSpec.describe OcrJob, type: :job do
   end
 
   describe '#perform' do
-    context 'when file_url is blank' do
-      let(:content_type) { 'application/pdf' }
+    context 'when file is not attached' do
+      let(:no_file_doc) do
+        double('Document', file: double('file', attached?: false))
+      end
 
       it 'does nothing' do
-        dh = document_hash.merge(file_url: nil)
-        expect(OcrStartedEvent).not_to receive(:call)
-        described_class.perform_now(dh)
+        expect(ChangeDocumentStatus).not_to receive(:call!)
+        described_class.perform_now(no_file_doc)
       end
     end
 
     context 'when content_type is application/pdf and text > 100 chars' do
-      let(:content_type) { 'application/pdf' }
+      before { allow(document).to receive(:content_type).and_return('application/pdf') }
 
-      it 'calls started, succeeds, and enqueues NLP once' do
+      it 'calls ocr_started, completes OCR, and enqueues NLP' do
         pdf_text = 'A' * 150
         reader = double('PDF::Reader', pages: [ double('page', text: pdf_text) ])
         allow(PDF::Reader).to receive(:new).and_return(reader)
 
-        expect(OcrStartedEvent).to receive(:call).with(instance_of(OpenStruct))
-        expect(OcrSucceededEvent).to receive(:call).with(instance_of(OpenStruct))
+        expect(ChangeDocumentStatus).to receive(:call!).with(document: document, action: :ocr_started)
+        expect(CompleteDocumentOcr).to receive(:call!).with(document: document, text_ocr: pdf_text)
+        expect(NlpJob).to receive(:perform_later).with(document)
 
-        described_class.perform_now(document_hash)
-
-        expect(NlpJob).to have_received(:perform_later).with(
-          hash_including(text_ocr: pdf_text, document_id: document_hash[:document_id])
-        )
+        described_class.perform_now(document)
       end
     end
 
-    context 'when content_type is application/pdf but direct text short' do
-      let(:content_type) { 'application/pdf' }
+    context 'when content_type is application/pdf but direct text is short' do
+      before { allow(document).to receive(:content_type).and_return('application/pdf') }
 
       it 'falls back to image OCR for each page' do
         reader = double('PDF::Reader', pages: [ double('page', text: 'short') ])
         allow(PDF::Reader).to receive(:new).and_return(reader)
 
-        allow_any_instance_of(Processing::OcrJob).to receive(:convert_pdf_to_images)
-                                                       .and_return(%w[/tmp/foo-001.png /tmp/foo-002.png])
+        allow_any_instance_of(OcrJob).to receive(:convert_pdf_to_images)
+                                          .and_return(%w[/tmp/foo-001.png /tmp/foo-002.png])
+        allow_any_instance_of(OcrJob).to receive(:extract_text_from_image)
+                                          .with('/tmp/foo-001.png').and_return('ONE')
+        allow_any_instance_of(OcrJob).to receive(:extract_text_from_image)
+                                          .with('/tmp/foo-002.png').and_return('TWO')
 
-        allow_any_instance_of(Processing::OcrJob).to receive(:extract_text_from_image)
-                                                       .with('/tmp/foo-001.png').and_return('ONE')
-        allow_any_instance_of(Processing::OcrJob).to receive(:extract_text_from_image)
-                                                       .with('/tmp/foo-002.png').and_return('TWO')
+        expect(CompleteDocumentOcr).to receive(:call!).with(document: document, text_ocr: "ONE\n---\nTWO")
+        expect(NlpJob).to receive(:perform_later).with(document)
 
-        expect(OcrStartedEvent).to receive(:call)
-        expect(OcrSucceededEvent).to receive(:call)
-
-        described_class.perform_now(document_hash)
-
-        expect(NlpJob).to have_received(:perform_later).with(
-          hash_including(text_ocr: "ONE\n---\nTWO", document_id: document_hash[:document_id])
-        )
+        described_class.perform_now(document)
       end
     end
 
     context 'when content_type is an image' do
-      let(:content_type) { 'image/png' }
+      before { allow(document).to receive(:content_type).and_return('image/png') }
 
       it 'uses image OCR path' do
         ocr_text = 'i got text'
-        allow_any_instance_of(Processing::OcrJob).to receive(:extract_text_from_image)
-                                                       .and_return(ocr_text)
+        allow_any_instance_of(OcrJob).to receive(:extract_text_from_image).and_return(ocr_text)
 
-        expect(OcrStartedEvent).to receive(:call)
-        expect(OcrSucceededEvent).to receive(:call)
+        expect(ChangeDocumentStatus).to receive(:call!).with(document: document, action: :ocr_started)
+        expect(CompleteDocumentOcr).to receive(:call!).with(document: document, text_ocr: ocr_text.strip)
+        expect(NlpJob).to receive(:perform_later).with(document)
 
-        described_class.perform_now(document_hash.merge(content_type: 'image/png'))
-
-        expect(NlpJob).to have_received(:perform_later).with(
-          hash_including(text_ocr: ocr_text.strip, document_id: document_hash[:document_id])
-        )
+        described_class.perform_now(document)
       end
     end
 
     context 'when an exception is raised during OCR' do
-      let(:content_type) { 'image/png' }
+      before do
+        allow(document).to receive(:content_type).and_return('application/pdf')
+        allow_any_instance_of(OcrJob).to receive(:extract_text_from_pdf_directly).and_raise(StandardError.new("boom"))
+        allow(ChangeDocumentStatus).to receive(:call)
+      end
 
-      it 'logs error, fires failed event, and re-raises' do
-        allow_any_instance_of(Processing::OcrJob).to receive(:extract_text_from_image)
-                                                       .and_raise(StandardError.new("boom"))
-
-        expect(OcrFailedEvent).to receive(:call).with(
-          instance_of(OpenStruct),
-          hash_including(message: "boom")
-        )
+      it 'logs error, calls ocr_failed status, and re-raises' do
+        expect(ChangeDocumentStatus).to receive(:call).with(document: document, action: :ocr_failed)
 
         expect {
-          described_class.perform_now(document_hash)
+          described_class.perform_now(document)
         }.to raise_error(StandardError, "boom")
       end
     end

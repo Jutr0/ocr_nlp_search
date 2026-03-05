@@ -51,7 +51,7 @@ class Document < ApplicationRecord
   enum :category, {
     it_services: "it_services",
     office_supplies: "office_supplies",
-    travel_and_transportation: "marketing_and_advertising",
+    travel_and_transportation: "travel_and_transportation",
     marketing_and_advertising: "marketing_and_advertising",
     legal_and_accounting: "legal_and_accounting",
     utilities_and_subscriptions: "utilities_and_subscriptions",

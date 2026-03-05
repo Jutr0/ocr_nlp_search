@@ -5,7 +5,7 @@ RSpec.describe CreateDocument, type: :interactor do
   subject(:context) { described_class.call(file: file, user_id: user.id) }
 
   before do
-    allow(DocumentCreatedEvent).to receive(:call)
+    allow(OcrJob).to receive(:perform_later)
   end
 
   include_examples "documents_seed"

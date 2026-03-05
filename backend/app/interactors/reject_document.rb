@@ -15,6 +15,6 @@ class RejectDocument
 
     context.document.update!(status: :ocr_retrying)
     log_document_history(context.document, :rejected)
-    OcrJob.call(context.document)
+    OcrJob.perform_later(context.document)
   end
 end

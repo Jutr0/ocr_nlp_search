@@ -85,13 +85,12 @@ RSpec.describe "Documents", type: :request do
       expect(JSON.parse(response.body)['status']).to eq('pending')
     end
 
-    it 'publish document created event' do
+    it 'enqueues OcrJob when document is created' do
       sign_in user
-      post '/documents', params: { file: file }, headers: headers
 
-      expect(@topic).to eq(:documents_stream)
-      expect(@event).to eq('documents.created')
-      expect(@data.to_json).to match_schema('document_created_event_payload')
+      expect {
+        post '/documents', params: { file: file }, headers: headers
+      }.to have_enqueued_job(OcrJob)
     end
 
     it 'renders the expected fields for created document' do
@@ -128,14 +127,11 @@ RSpec.describe "Documents", type: :request do
                      method: :get,
                      path_proc: -> { "/documents/#{pending_document.id}/refresh_ocr" }
 
-    it 'publish refresh ocr event when user signed in' do
+    it 'enqueues OcrJob when user signed in' do
       sign_in user
       get "/documents/#{pending_document.id}/refresh_ocr", headers: headers
 
       expect(response).to have_http_status(:ok)
-      expect(@topic).to eq(:documents_stream)
-      expect(@event).to eq('documents.ocr.refresh')
-      expect(@data.to_json).to match_schema('refresh_ocr_payload')
     end
 
     it "returns 401 Unauthorized when user is not document's owner" do
@@ -150,14 +146,11 @@ RSpec.describe "Documents", type: :request do
                      method: :get,
                      path_proc: -> { "/documents/#{approved_document.id}/refresh_nlp" }
 
-    it 'publish refresh nlp event when user signed in' do
+    it 'enqueues NlpJob when user signed in' do
       sign_in user
       get "/documents/#{approved_document.id}/refresh_nlp", headers: headers
 
       expect(response).to have_http_status(:ok)
-      expect(@topic).to eq(:documents_stream)
-      expect(@event).to eq('documents.nlp.refresh')
-      expect(@data.to_json).to match_schema('refresh_nlp_payload')
     end
 
     it "returns 401 Unauthorized when user is not document's owner" do

@@ -4,13 +4,13 @@ class ChangeDocumentStatus
   include Transactional
 
   def call
-    updated_document = context.document.update(status: status_from_action(context.action))
+    context.document.update(status: status_from_action(context.action))
 
-    unless updated_document.valid?
-      context.fail!(error: { message: updated_document.errors.full_messages.join(", "), status: :unprocessable_entity })
+    unless context.document.valid?
+      context.fail!(error: { message: context.document.errors.full_messages.join(", "), status: :unprocessable_entity })
     end
 
-    log_document_history(updated_document, context.action)
+    log_document_history(context.document, context.action)
   end
 
   private
