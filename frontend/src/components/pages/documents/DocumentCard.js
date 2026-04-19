@@ -2,10 +2,12 @@ import React from 'react';
 import {Box, Paper, Stack, Typography} from '@mui/material';
 import DocumentPreviewModal from "./DocumentPreviewModal";
 import Button from "../../common/Button";
+import {useNavigate} from "react-router-dom";
 
 const DocumentCard = ({document, onReject, onApprove}) => {
     const isImage = (type) => type?.startsWith('image/');
     const [modalOpen, setModalOpen] = React.useState(null);
+    const navigate = useNavigate();
 
 
     return <>
@@ -49,7 +51,8 @@ const DocumentCard = ({document, onReject, onApprove}) => {
             <Stack direction="row" spacing={1} justifyContent="space-between">
                 <Button variant="outlined" color="primary" size="small"
                         onClick={() => setModalOpen('preview')}>View</Button>
-                <Button variant="outlined" color="secondary" size="small">Edit</Button>
+                <Button variant="outlined" color="secondary" size="small"
+                        onClick={() => navigate(`/documents/edit/${document.id}`)}>Edit</Button>
                 <Button variant="contained" color="success" size="small"
                         onClick={() => onApprove(document.id)}>Approve</Button>
                 <Button variant="contained" color="error" size="small"

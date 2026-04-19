@@ -3,10 +3,12 @@ import DocumentPreview from "./documentPreview/DocumentPreview";
 import {Button} from "@mui/material";
 import {buildActions} from "../../../utils/actionsBuilder";
 import {useEffect, useState} from "react";
+import {useNavigate} from "react-router-dom";
 
 const DocumentPreviewModal = ({document, onClose, onApprove, onReject}) => {
     const [fullDocument, setFullDocument] = useState(document);
     const actions = buildActions("document");
+    const navigate = useNavigate();
 
     useEffect(() => {
         actions.getOne(document.id).then(setFullDocument)
@@ -17,7 +19,7 @@ const DocumentPreviewModal = ({document, onClose, onApprove, onReject}) => {
         size="xl"
         title={`${document.file.filename} - View`}
         actions={<>
-            <Button onClick={onClose} variant='outlined' color="secondary">Edit</Button>
+            <Button onClick={() => navigate(`/documents/edit/${document.id}`)} variant='outlined' color="secondary">Edit</Button>
             <Button variant='contained' color="success"
                     onClick={() => onApprove(document.id)}>Approve</Button>
             <Button variant='contained' color="error"

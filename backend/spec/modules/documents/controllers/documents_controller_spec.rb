@@ -278,4 +278,59 @@ RSpec.describe "Documents", type: :request do
       end
     end
   end
+
+  describe "PATCH /api/documents/:id" do
+    context "as the owner with valid params" do
+      it "updates the document and returns 200" do
+        document = create(:document, :to_review, user: user, invoice_number: "OLD-001")
+
+        patch "/api/documents/#{document.id}",
+              params: { invoice_number: "NEW-001", company_name: "Updated Co" },
+              headers: auth_headers(user),
+              as: :json
+
+        expect(response).to have_http_status(:ok)
+        document.reload
+        expect(document.invoice_number).to eq("NEW-001")
+        expect(document.company_name).to eq("Updated Co")
+      end
+
+      it "creates an edited history log" do
+        document = create(:document, :to_review, user: user)
+
+        expect {
+          patch "/api/documents/#{document.id}",
+                params: { invoice_number: "NEW-001" },
+                headers: auth_headers(user),
+                as: :json
+        }.to change(Documents::DocumentHistoryLog, :count).by(1)
+      end
+    end
+
+    context "with no editable attributes" do
+      it "returns 422" do
+        document = create(:document, :to_review, user: user)
+
+        patch "/api/documents/#{document.id}",
+              params: {},
+              headers: auth_headers(user),
+              as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
+
+    context "accessing another user's document" do
+      it "returns 401" do
+        document = create(:document, :to_review, user: other_user)
+
+        patch "/api/documents/#{document.id}",
+              params: { invoice_number: "HACKED" },
+              headers: auth_headers(user),
+              as: :json
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
 end

@@ -54,10 +54,18 @@ module Documents
       head :ok
     end
 
+    def update
+      UpdateDocument.call!(document: @document, attributes: document_params.to_h.symbolize_keys)
+      render :show, status: :ok
+    end
+
     private
 
     def document_params
-      params.permit(:file)
+      params.permit(
+        :file, :doc_type, :category, :invoice_number, :issue_date,
+        :company_name, :nip, :net_amount, :gross_amount, :currency
+      )
     end
   end
 end

@@ -4,12 +4,13 @@ import Box from "@mui/material/Box";
 import DescriptionIcon from "@mui/icons-material/Description";
 import React, {useEffect, useState} from "react";
 import {buildActions, get} from "../../../utils/actionsBuilder";
-import {useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import Button from "../../common/Button";
 import DocumentPreview from "./documentPreview/DocumentPreview";
 
 const DocumentView = () => {
     const {id} = useParams();
+    const navigate = useNavigate();
 
     const actions = {
         ...buildActions("document"),
@@ -29,6 +30,7 @@ const DocumentView = () => {
                         path: "/documents/all"
                     }, {label: `${document?.file?.filename} - View`}]}
                     buttons={<>
+                        <Button onClick={() => navigate(`/documents/edit/${id}`)} variant='outlined'>Edit</Button>
                         <Button onClick={actions.refreshOcr} variant='contained'>Refresh OCR</Button>
                         <Button onClick={actions.refreshNlp} variant='contained'>Refresh NLP</Button>
                     </>}
