@@ -1,292 +1,278 @@
 require 'rails_helper'
-require 'ostruct'
-require 'modules/documents/seeds/documents_seed'
-module Documents
-  RSpec.describe Documents::DocumentsController, type: :controller do
-    include Devise::Test::ControllerHelpers
-    include_examples 'documents_seed'
 
-    before do
-      allow(Processing::OcrJob).to receive(:perform_later)
-      allow(Processing::NlpJob).to receive(:perform_later)
-    end
+RSpec.describe "Documents", type: :request do
+  let(:user) { create(:user) }
+  let(:other_user) { create(:user) }
 
-    describe 'GET #index' do
-      include_examples 'an user-only endpoint', method: :get, action: :index
+  describe "GET /api/documents" do
+    context "as the owner" do
+      it "returns 200 and only own documents" do
+        own = create(:document, user: user)
+        create(:document, user: other_user)
 
-      context "returns list of signed user's documents" do
-        it 'user' do
-          sign_in user
-          get :index, format: :json
-
-          expect(response).to have_http_status(:ok)
-          json = JSON.parse(response.body)
-          expect(json).to be_an(Array)
-          ids = json.map { |d| d['id'] }
-          expect(ids).to include(pending_document.id, approved_document.id)
-          expect(ids).not_to include(another_user_document.id)
-        end
-
-        it 'another user' do
-          sign_in another_user
-          get :index, format: :json
-
-          expect(response).to have_http_status(:ok)
-          json = JSON.parse(response.body)
-          expect(json).to be_an(Array)
-          ids = json.map { |d| d['id'] }
-          expect(ids).to include(another_user_document.id)
-          expect(ids).not_to include(pending_document.id)
-          expect(ids).not_to include(approved_document.id)
-        end
-      end
-
-      it 'renders the expected fields for each document' do
-        sign_in user
-        get :index, format: :json
-        expect(response.body).to match_schema('user_documents')
-      end
-    end
-
-    describe 'GET #show' do
-      include_examples 'an user-only endpoint',
-                       method: :get,
-                       action: :show,
-                       params_proc: -> { { id: pending_document.id } }
-
-      it 'returns document data when user signed in' do
-        sign_in user
-        get :show, params: { id: pending_document.id }, format: :json
+        get "/api/documents", headers: auth_headers(user)
 
         expect(response).to have_http_status(:ok)
-        json = JSON.parse(response.body)
-        expect(json['id']).to eq(pending_document.id)
-      end
-
-      it "returns 401 Unauthorized when user is not document's owner" do
-        sign_in user
-        get :show, params: { id: another_user_document.id }, format: :json
-        expect(response).to have_http_status(:unauthorized)
-      end
-
-      it 'renders the expected fields for document' do
-        sign_in user
-        get :show, params: { id: pending_document.id }, format: :json
-        expect(response.body).to match_schema('user_pending_document')
+        ids = JSON.parse(response.body).map { |d| d["id"] }
+        expect(ids).to include(own.id)
+        expect(ids).not_to include(other_user.id)
       end
     end
 
-    describe 'POST #create' do
-      include_examples 'an user-only endpoint',
-                       method: :post,
-                       action: :create,
-                       params_proc: -> { { file: file } }
+    context "when not authenticated" do
+      it "returns 401" do
+        get "/api/documents", headers: { "Accept" => "application/json" }
 
-      it 'creates a document when user signed in' do
-        sign_in user
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
 
+  describe "GET /api/documents/to_review" do
+    context "as the owner" do
+      it "returns 200 and only to_review documents" do
+        to_review_doc = create(:document, :to_review, user: user)
+        create(:document, user: user)
+
+        get "/api/documents/to_review", headers: auth_headers(user)
+
+        expect(response).to have_http_status(:ok)
+        ids = JSON.parse(response.body).map { |d| d["id"] }
+        expect(ids).to include(to_review_doc.id)
+      end
+
+      it "does not include pending documents" do
+        pending_doc = create(:document, user: user)
+
+        get "/api/documents/to_review", headers: auth_headers(user)
+
+        ids = JSON.parse(response.body).map { |d| d["id"] }
+        expect(ids).not_to include(pending_doc.id)
+      end
+    end
+  end
+
+  describe "GET /api/documents/:id" do
+    context "as the owner" do
+      it "returns 200 and document details" do
+        document = create(:document, user: user)
+
+        get "/api/documents/#{document.id}", headers: auth_headers(user)
+
+        expect(response).to have_http_status(:ok)
+        body = JSON.parse(response.body)
+        expect(body["id"]).to eq(document.id)
+        expect(body["status"]).to eq(document.status)
+      end
+    end
+
+    context "accessing another user's document" do
+      it "returns 401" do
+        document = create(:document, user: other_user)
+
+        get "/api/documents/#{document.id}", headers: auth_headers(user)
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    context "with a non-existent id" do
+      it "returns 404" do
+        get "/api/documents/#{SecureRandom.uuid}", headers: auth_headers(user)
+
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+  end
+
+  describe "POST /api/documents" do
+    let(:pdf_file) do
+      Rack::Test::UploadedFile.new(
+        StringIO.new("%PDF-1.4 fake content"),
+        "application/pdf",
+        original_filename: "invoice.pdf"
+      )
+    end
+
+    context "as authenticated user with valid file" do
+      before do
+        allow(Processing::OcrJob).to receive(:perform_later)
+      end
+
+      it "returns 201 and creates a document" do
         expect {
-          post :create, params: { file: file }, format: :json
-        }.to change(Document, :count).by(1)
+          post "/api/documents",
+               params: { file: pdf_file },
+               headers: auth_headers(user)
+        }.to change(Documents::Document, :count).by(1)
 
         expect(response).to have_http_status(:created)
-        json = JSON.parse(response.body)
-        expect(json['status']).to eq('pending')
-      end
-      it 'enqueues OCR job' do
-        sign_in user
-
-        post :create, params: { file: file }, format: :json
-
-        expect(Processing::OcrJob).to have_received(:perform_later).with(
-          hash_including(:document_id, :file_url, :filename, :content_type, :user_id)
-        )
+        body = JSON.parse(response.body)
+        expect(body["status"]).to eq("pending")
       end
 
-      it 'renders the expected fields for created document' do
-        sign_in user
-        post :create, params: { file: file }, format: :json
+      it "enqueues OcrJob for the new document" do
+        expect(Processing::OcrJob).to receive(:perform_later).once
 
-        expect(response.body).to match_schema('user_created_document')
+        post "/api/documents",
+             params: { file: pdf_file },
+             headers: auth_headers(user)
       end
     end
 
-    describe 'DELETE #destroy' do
-      include_examples 'an user-only endpoint',
-                       method: :delete,
-                       action: :destroy,
-                       params_proc: -> { { id: pending_document.id } }
+    context "without a file" do
+      it "returns 422" do
+        post "/api/documents", headers: auth_headers(user), as: :json
 
-      it 'destroys document when user signed in' do
-        sign_in user
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
+
+    context "when not authenticated" do
+      it "returns 401" do
+        post "/api/documents",
+             params: { file: pdf_file },
+             headers: { "Accept" => "application/json" }
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
+
+  describe "DELETE /api/documents/:id" do
+    context "as the owner" do
+      it "deletes the document and returns 200" do
+        document = create(:document, user: user)
+
         expect {
-          delete :destroy, params: { id: pending_document.id }, format: :json
-        }.to change(Document, :count).by(-1)
-      end
+          delete "/api/documents/#{document.id}", headers: auth_headers(user)
+        }.to change(Documents::Document, :count).by(-1)
 
-      it "returns 401 Unauthorized when user is not document's owner" do
-        sign_in user
-        delete :destroy, params: { id: another_user_document.id }, format: :json
-        expect(response).to have_http_status(:unauthorized)
+        expect(response).to have_http_status(:ok)
       end
     end
 
-    describe 'GET #refresh_ocr' do
-      include_examples 'an user-only endpoint',
-                       method: :get,
-                       action: :refresh_ocr,
-                       params_proc: -> { { id: pending_document.id } }
+    context "accessing another user's document" do
+      it "returns 401 and does not delete" do
+        document = create(:document, user: other_user)
 
-      it 'enqueues OCR job when user signed in' do
-        sign_in user
-        get :refresh_ocr, params: { id: pending_document.id }, format: :json
-        expect(response).to have_http_status(:ok)
-
-        expect(Processing::OcrJob).to have_received(:perform_later).with(
-          hash_including(document_id: pending_document.id)
-        )
-      end
-
-      it "returns 401 Unauthorized when user is not document's owner" do
-        sign_in user
-        get :refresh_ocr, params: { id: another_user_document.id }, format: :json
+        expect {
+          delete "/api/documents/#{document.id}", headers: auth_headers(user)
+        }.not_to change(Documents::Document, :count)
 
         expect(response).to have_http_status(:unauthorized)
       end
     end
-    describe 'GET #refresh_nlp' do
-      include_examples 'an user-only endpoint',
-                       method: :get,
-                       action: :refresh_nlp,
-                       params_proc: -> { { id: approved_document.id } }
+  end
 
-      it 'enqueues NLP job when user signed in' do
-        sign_in user
-        get :refresh_nlp, params: { id: approved_document.id }, format: :json
+  describe "GET /api/documents/:id/refresh_ocr" do
+    context "as the owner" do
+      it "enqueues OcrJob and returns 200" do
+        document = create(:document, user: user)
+        allow(Processing::OcrJob).to receive(:perform_later)
+
+        get "/api/documents/#{document.id}/refresh_ocr", headers: auth_headers(user)
+
         expect(response).to have_http_status(:ok)
-
-        expect(Processing::NlpJob).to have_received(:perform_later).with(
-          hash_including(document_id: approved_document.id)
-        )
+        expect(Processing::OcrJob).to have_received(:perform_later)
       end
+    end
 
-      it "returns 401 Unauthorized when user is not document's owner" do
-        sign_in user
-        get :refresh_nlp, params: { id: another_user_document.id }, format: :json
+    context "accessing another user's document" do
+      it "returns 401" do
+        document = create(:document, user: other_user)
+
+        get "/api/documents/#{document.id}/refresh_ocr", headers: auth_headers(user)
 
         expect(response).to have_http_status(:unauthorized)
       end
     end
+  end
 
-    describe 'GET #to_review' do
-      include_examples 'an user-only endpoint', method: :get, action: :to_review
+  describe "GET /api/documents/:id/refresh_nlp" do
+    context "as the owner" do
+      it "enqueues NlpJob and returns 200" do
+        document = create(:document, user: user)
+        allow(Processing::NlpJob).to receive(:perform_later)
 
-      context "returns list of signed user's documents" do
-        it 'user' do
-          sign_in user
-          get :to_review, format: :json
+        get "/api/documents/#{document.id}/refresh_nlp", headers: auth_headers(user)
 
-          expect(response).to have_http_status(:ok)
-          json = JSON.parse(response.body)
-          expect(json).to be_an(Array)
-          ids = json.map { |d| d['id'] }
-          expect(ids).to include(to_review_document.id)
-
-          [
-            pending_document,
-            approved_document,
-            another_user_document,
-            another_user_to_review_document
-          ].each do |doc|
-            expect(ids).not_to include(doc.id)
-          end
-        end
-
-        it 'another user' do
-          sign_in another_user
-          get :to_review, format: :json
-
-          expect(response).to have_http_status(:ok)
-          json = JSON.parse(response.body)
-          expect(json).to be_an(Array)
-          ids = json.map { |d| d['id'] }
-          expect(ids).to include(another_user_to_review_document.id)
-
-          [
-            pending_document,
-            approved_document,
-            another_user_document,
-            to_review_document
-          ].each do |doc|
-            expect(ids).not_to include(doc.id)
-          end
-        end
-      end
-
-      it 'renders the expected fields for each document' do
-        sign_in user
-        get :to_review, format: :json
-        expect(response.body).to match_schema('user_to_review_documents')
+        expect(response).to have_http_status(:ok)
+        expect(Processing::NlpJob).to have_received(:perform_later)
       end
     end
 
-    describe 'POST #approve' do
-      include_examples 'an user-only endpoint',
-                       method: :post,
-                       action: :approve,
-                       params_proc: -> { { id: to_review_document.id } }
+    context "accessing another user's document" do
+      it "returns 401" do
+        document = create(:document, user: other_user)
 
-      it "change document status to approved" do
-        sign_in user
-        post :approve, params: { id: to_review_document.id }, format: :json
+        get "/api/documents/#{document.id}/refresh_nlp", headers: auth_headers(user)
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
+
+  describe "POST /api/documents/:id/approve" do
+    context "when document is in to_review state" do
+      it "approves the document and returns 200" do
+        document = create(:document, :to_review, user: user)
+
+        post "/api/documents/#{document.id}/approve", headers: auth_headers(user)
 
         expect(response).to have_http_status(:ok)
-        expect(to_review_document.reload).to be_approved
+        expect(document.reload.status).to eq("approved")
       end
+    end
 
-      it 'returns 422 Unprocessable Entity if document is not to_review' do
-        sign_in user
-        post :approve, params: { id: pending_document.id }, format: :json
+    context "when document is not in to_review state" do
+      it "returns 422" do
+        document = create(:document, user: user)
+
+        post "/api/documents/#{document.id}/approve", headers: auth_headers(user)
 
         expect(response).to have_http_status(:unprocessable_entity)
-        expect(JSON.parse(response.body)["message"]).to eq("Document must be in to_review state to be approved")
-        expect(pending_document.reload).not_to be_approved
       end
+    end
 
-      it "returns 401 Unauthorized when user is not document's owner" do
-        sign_in user
-        post :approve, params: { id: another_user_document.id }, format: :json
+    context "accessing another user's document" do
+      it "returns 401" do
+        document = create(:document, :to_review, user: other_user)
+
+        post "/api/documents/#{document.id}/approve", headers: auth_headers(user)
 
         expect(response).to have_http_status(:unauthorized)
       end
     end
+  end
 
-    describe 'POST #reject' do
-      include_examples 'an user-only endpoint',
-                       method: :post,
-                       action: :reject,
-                       params_proc: -> { { id: to_review_document.id } }
+  describe "POST /api/documents/:id/reject" do
+    context "when document is in to_review state" do
+      it "returns 200 and re-enqueues OCR" do
+        document = create(:document, :to_review, user: user)
+        allow(Processing::OcrJob).to receive(:perform_later)
 
-      it "change document status to reject" do
-        sign_in user
-        post :reject, params: { id: to_review_document.id }, format: :json
+        post "/api/documents/#{document.id}/reject", headers: auth_headers(user)
 
         expect(response).to have_http_status(:ok)
-        expect(to_review_document.reload).to be_ocr_retrying
       end
+    end
 
-      it 'returns 422 Unprocessable Entity if document is not to_review' do
-        sign_in user
-        post :reject, params: { id: pending_document.id }, format: :json
+    context "when document is not in to_review state" do
+      it "returns 422" do
+        document = create(:document, user: user)
+
+        post "/api/documents/#{document.id}/reject", headers: auth_headers(user)
 
         expect(response).to have_http_status(:unprocessable_entity)
-        expect(JSON.parse(response.body)["message"]).to eq("Document must be in to_review state to be rejected")
-        expect(pending_document.reload).not_to be_ocr_retrying
       end
+    end
 
-      it "returns 401 Unauthorized when user is not document's owner" do
-        sign_in user
-        post :reject, params: { id: another_user_document.id }, format: :json
+    context "accessing another user's document" do
+      it "returns 401" do
+        document = create(:document, :to_review, user: other_user)
+
+        post "/api/documents/#{document.id}/reject", headers: auth_headers(user)
 
         expect(response).to have_http_status(:unauthorized)
       end

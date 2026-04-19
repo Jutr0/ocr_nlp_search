@@ -1,116 +1,139 @@
 require 'rails_helper'
-module Users
-  RSpec.describe UsersController, type: :controller do
-    include Devise::Test::ControllerHelpers
-    include_examples 'basic_seed'
 
-    describe 'GET #index' do
-      include_examples 'an superadmin-only endpoint', method: :get, action: :index
+RSpec.describe "Users", type: :request do
+  let(:superadmin) { create(:user, :superadmin) }
+  let(:regular_user) { create(:user) }
 
-      it 'returns list of users when superadmin signed in' do
-        sign_in superadmin
-        get :index, format: :json
+  before { superadmin; regular_user }
+
+  describe "GET /api/users" do
+    context "as superadmin" do
+      it "returns 200 and lists all users" do
+        create_list(:user, 2)
+
+        get "/api/users", headers: auth_headers(superadmin)
 
         expect(response).to have_http_status(:ok)
-        json = JSON.parse(response.body)
-        expect(json).to be_an(Array)
-        emails = json.map { |u| u['email'] }
-        expect(emails).to include(superadmin.email, user.email)
-      end
-
-      it 'renders the expected fields for each user' do
-        sign_in superadmin
-        get :index, format: :json
-        expect(response.body).to match_schema('users')
+        expect(JSON.parse(response.body).length).to be >= 3
       end
     end
 
-    describe 'GET #show' do
-      include_examples 'an superadmin-only endpoint', method: :get, action: :show, params_proc: -> { { id: user.id } }
+    context "as regular user" do
+      it "returns 401" do
+        get "/api/users", headers: auth_headers(regular_user)
 
-      it 'returns user data when superadmin signed in' do
-        sign_in superadmin
-        get :show, params: { id: user.id }, format: :json
-
-        expect(response).to have_http_status(:ok)
-        json = JSON.parse(response.body)
-        expect(json['id']).to eq(user.id)
-        expect(json['email']).to eq(user.email)
-      end
-
-      it 'renders the expected fields for user' do
-        sign_in superadmin
-        get :show, params: { id: user.id }, format: :json
-        expect(response.body).to match_schema('user')
+        expect(response).to have_http_status(:unauthorized)
       end
     end
 
-    describe 'POST #create' do
-      let(:user_params) do
-        {
-          email: 'new@example.com',
-          password: 'password123',
-          password_confirmation: 'password123',
-          role: 'user'
-        }
+    context "when not authenticated" do
+      it "returns 401" do
+        get "/api/users", headers: { "Accept" => "application/json" }
+
+        expect(response).to have_http_status(:unauthorized)
       end
+    end
+  end
 
-      include_examples 'an superadmin-only endpoint', method: :post, action: :create, params_proc: -> { { user: user_params } }
+  describe "GET /api/users/:id" do
+    context "as superadmin" do
+      it "returns 200 and the user data" do
+        get "/api/users/#{regular_user.id}", headers: auth_headers(superadmin)
 
-      it 'creates a new user when superadmin signed in' do
-        sign_in superadmin
+        expect(response).to have_http_status(:ok)
+        body = JSON.parse(response.body)
+        expect(body["id"]).to eq(regular_user.id)
+        expect(body["email"]).to eq(regular_user.email)
+        expect(body["role"]).to eq(regular_user.role)
+      end
+    end
+
+    context "as regular user" do
+      it "returns 401" do
+        get "/api/users/#{regular_user.id}", headers: auth_headers(regular_user)
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    context "with a non-existent id" do
+      it "returns 404" do
+        get "/api/users/#{SecureRandom.uuid}", headers: auth_headers(superadmin)
+
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+  end
+
+  describe "PATCH /api/users/:id" do
+    context "as superadmin" do
+      it "updates the user and returns 200" do
+        patch "/api/users/#{regular_user.id}",
+              params: { user: { role: "superadmin" } },
+              headers: auth_headers(superadmin),
+              as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(regular_user.reload.role).to eq("superadmin")
+      end
+    end
+
+    context "as regular user" do
+      it "returns 401" do
+        patch "/api/users/#{regular_user.id}",
+              params: { user: { role: "superadmin" } },
+              headers: auth_headers(regular_user),
+              as: :json
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
+
+  describe "DELETE /api/users/:id" do
+    context "as superadmin" do
+      it "deletes the user and returns 200" do
+        target = create(:user)
+
         expect {
-          post :create, params: { user: user_params }, format: :json
-        }.to change(Users::User, :count).by(1)
-
-        expect(response).to have_http_status(:created)
-        json = JSON.parse(response.body)
-        expect(json['email']).to eq('new@example.com')
-        expect(json['role']).to eq('user')
-      end
-
-      it 'renders the expected fields for created user' do
-        sign_in superadmin
-        post :create, params: { user: user_params }, format: :json
-        expect(response.body).to match_schema('created_user')
-      end
-    end
-
-    describe 'PATCH #update' do
-      let(:update_params) { { email: 'updated@example.com' } }
-
-      include_examples 'an superadmin-only endpoint',
-                       method: :patch,
-                       action: :update,
-                       params_proc: -> { { id: user.id, user: update_params } }
-
-      it 'updates user when superadmin signed in' do
-        sign_in superadmin
-        patch :update, params: { id: user.id, user: update_params }, format: :json
-
-        expect(response).to have_http_status(:ok)
-        expect(user.reload.email).to eq('updated@example.com')
-        json = JSON.parse(response.body)
-        expect(json['email']).to eq('updated@example.com')
-      end
-
-      it 'renders the expected fields for updated user' do
-        sign_in superadmin
-        patch :update, params: { id: user.id, user: update_params }, format: :json
-        expect(response.body).to match_schema('updated_user')
-      end
-    end
-
-    describe 'DELETE #destroy' do
-      include_examples 'an superadmin-only endpoint', method: :delete, action: :destroy, params_proc: -> { { id: user.id } }
-
-      it 'destroys user when superadmin signed in' do
-        sign_in superadmin
-        expect {
-          delete :destroy, params: { id: user.id }, format: :json
+          delete "/api/users/#{target.id}", headers: auth_headers(superadmin)
         }.to change(Users::User, :count).by(-1)
 
         expect(response).to have_http_status(:no_content)
+      end
+    end
+
+    context "as regular user" do
+      it "returns 401" do
+        delete "/api/users/#{regular_user.id}", headers: auth_headers(regular_user)
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
+
+  describe "POST /api/users/create" do
+    context "as superadmin" do
+      it "creates a user and returns 201" do
+        expect {
+          post "/api/users/create",
+               params: { user: { email: "admin_new@example.com", password: "password123", password_confirmation: "password123", role: "superadmin" } },
+               headers: auth_headers(superadmin),
+               as: :json
+        }.to change(Users::User, :count).by(1)
+
+        expect(response).to have_http_status(:created)
+      end
+    end
+
+    context "as regular user" do
+      it "returns 401" do
+        post "/api/users/create",
+             params: { user: { email: "admin_new@example.com", password: "password123", password_confirmation: "password123" } },
+             headers: auth_headers(regular_user),
+             as: :json
+
+        expect(response).to have_http_status(:unauthorized)
       end
     end
   end

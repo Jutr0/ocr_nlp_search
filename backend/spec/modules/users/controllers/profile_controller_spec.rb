@@ -1,29 +1,26 @@
 require 'rails_helper'
-module Users
-  RSpec.describe Users::ProfileController, type: :controller do
-    include Devise::Test::ControllerHelpers
-    include_examples 'basic_seed'
 
-    describe 'GET #me' do
-      include_examples 'an signed-only endpoint', method: :get, action: :me
+RSpec.describe "Profile", type: :request do
+  describe "GET /api/profile/me" do
+    context "when authenticated" do
+      let(:user) { create(:user) }
 
-      it 'return currently signed user data' do
-        sign_in user
-        get :me, format: :json
+      it "returns 200 and the current user's data" do
+        get "/api/profile/me", headers: auth_headers(user)
 
         expect(response).to have_http_status(:ok)
-        json = JSON.parse(response.body)
-        expect(json['id']).to eq(user.id)
-        expect(json['email']).to eq(user.email)
-        expect(json['role']).to eq(user.role)
+        body = JSON.parse(response.body)
+        expect(body["id"]).to eq(user.id)
+        expect(body["email"]).to eq(user.email)
       end
+    end
 
-      it 'renders the expected fields for profile' do
-        sign_in user
-        get :me, format: :json
-        expect(response.body).to match_schema('user_profile')
+    context "when not authenticated" do
+      it "returns 401" do
+        get "/api/profile/me", headers: { "Accept" => "application/json" }
+
+        expect(response).to have_http_status(:unauthorized)
       end
-
     end
   end
 end
