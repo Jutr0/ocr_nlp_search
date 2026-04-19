@@ -14,7 +14,7 @@ gem "cancancan"
 gem "jbuilder"
 gem "sidekiq"
 gem "rack-cors"
-gem "dotenv-rails", groups: [:development, :test]
+gem "dotenv-rails", groups: [ :development, :test ]
 gem "annotaterb"
 gem "interactor"
 gem "ostruct"
@@ -24,21 +24,19 @@ gem "activestorage"
 gem "rtesseract"
 gem "mini_magick"
 gem "pdf-reader"
-gem 'ruby-openai'
+gem "ruby-openai"
 gem "tzinfo-data", platforms: %i[windows jruby]
-gem "karafka", "~> 2.5"
 
 group :development, :test do
-  gem 'pry'
-  gem 'pry-byebug'
+  gem "pry"
+  gem "pry-byebug"
   gem "brakeman", require: false
-  gem "rubocop-rails-omakase", require: false
   gem "rspec-rails"
   gem "factory_bot_rails"
   gem "shoulda-matchers"
 end
 
 group :test do
-  gem 'database_cleaner-active_record', '~> 2.1'
-  gem 'simplecov', require: false
+  gem "database_cleaner-active_record", "~> 2.1"
+  gem "simplecov", require: false
 end

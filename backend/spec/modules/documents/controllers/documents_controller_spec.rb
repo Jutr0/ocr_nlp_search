@@ -7,12 +7,8 @@ module Documents
     include_examples 'documents_seed'
 
     before do
-      allow(BasePublisher).to receive(:publish) do |payload|
-        topic, event, data = payload.values_at(:topic, :event, :data)
-        @topic = topic
-        @event = event
-        @data = data
-      end
+      allow(Processing::OcrJob).to receive(:perform_later)
+      allow(Processing::NlpJob).to receive(:perform_later)
     end
 
     describe 'GET #index' do
@@ -97,14 +93,14 @@ module Documents
         json = JSON.parse(response.body)
         expect(json['status']).to eq('pending')
       end
-      it 'publish document created event' do
+      it 'enqueues OCR job' do
         sign_in user
 
         post :create, params: { file: file }, format: :json
 
-        expect(@topic).to eq(:documents_stream)
-        expect(@event).to eq('documents.created')
-        expect(@data.to_json).to match_schema('document_created_event_payload')
+        expect(Processing::OcrJob).to have_received(:perform_later).with(
+          hash_including(:document_id, :file_url, :filename, :content_type, :user_id)
+        )
       end
 
       it 'renders the expected fields for created document' do
@@ -136,20 +132,19 @@ module Documents
     end
 
     describe 'GET #refresh_ocr' do
-
       include_examples 'an user-only endpoint',
                        method: :get,
                        action: :refresh_ocr,
                        params_proc: -> { { id: pending_document.id } }
 
-      it 'publish refresh ocr event when user signed in' do
+      it 'enqueues OCR job when user signed in' do
         sign_in user
         get :refresh_ocr, params: { id: pending_document.id }, format: :json
         expect(response).to have_http_status(:ok)
 
-        expect(@topic).to eq(:documents_stream)
-        expect(@event).to eq('documents.ocr.refresh')
-        expect(@data.to_json).to match_schema('refresh_ocr_payload')
+        expect(Processing::OcrJob).to have_received(:perform_later).with(
+          hash_including(document_id: pending_document.id)
+        )
       end
 
       it "returns 401 Unauthorized when user is not document's owner" do
@@ -160,20 +155,19 @@ module Documents
       end
     end
     describe 'GET #refresh_nlp' do
-
       include_examples 'an user-only endpoint',
                        method: :get,
                        action: :refresh_nlp,
                        params_proc: -> { { id: approved_document.id } }
 
-      it 'publish refresh nlp event when user signed in' do
+      it 'enqueues NLP job when user signed in' do
         sign_in user
         get :refresh_nlp, params: { id: approved_document.id }, format: :json
         expect(response).to have_http_status(:ok)
 
-        expect(@topic).to eq(:documents_stream)
-        expect(@event).to eq('documents.nlp.refresh')
-        expect(@data.to_json).to match_schema('refresh_nlp_payload')
+        expect(Processing::NlpJob).to have_received(:perform_later).with(
+          hash_including(document_id: approved_document.id)
+        )
       end
 
       it "returns 401 Unauthorized when user is not document's owner" do
@@ -297,6 +291,5 @@ module Documents
         expect(response).to have_http_status(:unauthorized)
       end
     end
-
   end
 end

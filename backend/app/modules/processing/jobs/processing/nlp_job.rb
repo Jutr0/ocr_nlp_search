@@ -1,22 +1,25 @@
-require 'net/http'
-require 'json'
-require 'openai'
+require "net/http"
+require "json"
+require "openai"
 
 module Processing
   class NlpJob < ApplicationJob
     queue_as :default
 
     def perform(document)
-
       document = StructUtils.deep_ostruct(document)
       return unless document&.text_ocr.present?
 
-      NlpStartedEvent.call(document)
+      Documents::ChangeDocumentStatus.call!(
+        document_id: document.document_id,
+        status: :nlp_processing,
+        action: :nlp_started
+      )
 
       result = analyze_with_llm(document.text_ocr)
       parsed = extract_json_from_response(result)
 
-      document.extracted_fields = {
+      extracted_fields = {
         doc_type: parsed["document_type"],
         net_amount: extract_decimal(parsed["net_amount"]),
         gross_amount: extract_decimal(parsed["gross_amount"]),
@@ -28,10 +31,19 @@ module Processing
         nip: parsed["nip"]
       }
 
-      NlpSucceededEvent.call(document)
+      Documents::ChangeDocumentStatus.call!(
+        document_id: document.document_id,
+        status: :to_review,
+        action: :nlp_succeeded,
+        attributes: extracted_fields
+      )
     rescue => e
       Rails.logger.error "[NlpJob] Error for Document #{document.document_id}: #{e.message}"
-      NlpFailedEvent.call(document, { message: e.message })
+      Documents::ChangeDocumentStatus.call!(
+        document_id: document.document_id,
+        status: :nlp_retrying,
+        action: :nlp_failed
+      )
       raise e
     end
 
@@ -83,8 +95,8 @@ module Processing
     end
 
     def extract_json_from_response(response_text)
-      json_start = response_text.index('{')
-      json_end = response_text.rindex('}')
+      json_start = response_text.index("{")
+      json_end = response_text.rindex("}")
       raise "No JSON found in response" unless json_start && json_end
 
       json_str = response_text[json_start..json_end]

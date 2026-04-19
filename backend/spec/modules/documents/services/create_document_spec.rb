@@ -8,7 +8,7 @@ module Documents
     subject(:context) { CreateDocument.call(file: file, user_id: user.id) }
 
     before(:each) do
-      allow(DocumentCreatedEvent).to receive(:call)
+      allow(Processing::OcrJob).to receive(:perform_later)
     end
 
     it 'succeeds' do

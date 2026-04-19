@@ -8,7 +8,7 @@ module Documents
     subject(:context) { described_class.call(document: to_review_document) }
 
     before(:each) do
-      allow(DocumentOcrRefreshEvent).to receive(:call).and_return(true)
+      allow(Processing::OcrJob).to receive(:perform_later)
     end
     it 'succeeds' do
       expect(context).to be_success

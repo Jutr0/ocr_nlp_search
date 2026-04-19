@@ -22,12 +22,21 @@ module Documents
     end
 
     def refresh_ocr
-      DocumentOcrRefreshEvent.call(@document)
+      Processing::OcrJob.perform_later(
+        document_id: @document.id,
+        file_url: @document.file.url,
+        filename: @document.filename,
+        content_type: @document.file.content_type,
+        user_id: @document.user_id
+      )
       head :ok
     end
 
     def refresh_nlp
-      DocumentNlpRefreshEvent.call(@document)
+      Processing::NlpJob.perform_later(
+        document_id: @document.id,
+        text_ocr: @document.text_ocr
+      )
       head :ok
     end
 
@@ -50,6 +59,5 @@ module Documents
     def document_params
       params.permit(:file)
     end
-
   end
 end

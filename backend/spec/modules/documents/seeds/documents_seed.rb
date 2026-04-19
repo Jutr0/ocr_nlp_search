@@ -11,13 +11,13 @@ module Documents
     let(:another_user_to_review_document) { Document.find_by(status: :to_review, user: another_user) }
 
     before(:each) do
+      ActiveStorage::Current.url_options = { host: "http://localhost:4000" }
       populate_documents
     end
 
     private
 
     def populate_documents
-
       document_extracted_params = {
         doc_type: "invoice", gross_amount: 10_000, net_amount: 9_000, category: "office_supplies"
       }
