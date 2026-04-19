@@ -2,12 +2,13 @@ import React from 'react';
 import {Card, CardContent, Typography} from '@mui/material';
 import {Bar} from 'react-chartjs-2';
 import {BarElement, CategoryScale, Chart as ChartJS, LinearScale, Tooltip} from 'chart.js';
+import {categoryLabel} from '../../../utils/constants';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
 const ExpensesBarChart = ({data}) => {
     const chartData = {
-        labels: data.map(d => d.category),
+        labels: data.map(d => categoryLabel(d.category)),
         datasets: [{
             label: 'Total Amount',
             data: data.map(d => d.total),

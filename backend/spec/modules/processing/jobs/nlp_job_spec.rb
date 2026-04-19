@@ -14,9 +14,9 @@ module Processing
     before do
       allow(Documents::ChangeDocumentStatus).to receive(:call!).and_return(true)
 
-      fake_adapter = instance_double(Llm::Base)
+      fake_adapter = instance_double(Processing::Llm::Base)
       allow(fake_adapter).to receive(:complete).and_return(response_text)
-      allow(Llm::Factory).to receive(:build).and_return(fake_adapter)
+      allow(Processing::Llm::Factory).to receive(:build).and_return(fake_adapter)
     end
 
     after do
@@ -31,7 +31,7 @@ module Processing
 
         it 'does nothing' do
           expect(Documents::ChangeDocumentStatus).not_to receive(:call!)
-          expect(Llm::Factory).not_to receive(:build)
+          expect(Processing::Llm::Factory).not_to receive(:build)
           NlpJob.perform_now(document_hash)
         end
       end
@@ -86,9 +86,9 @@ module Processing
         let(:response_text) { '' }
 
         it 'logs error, reports failure, and re-raises' do
-          failing_adapter = instance_double(Llm::Base)
+          failing_adapter = instance_double(Processing::Llm::Base)
           allow(failing_adapter).to receive(:complete).and_raise(StandardError.new("boom"))
-          allow(Llm::Factory).to receive(:build).and_return(failing_adapter)
+          allow(Processing::Llm::Factory).to receive(:build).and_return(failing_adapter)
 
           expect { NlpJob.perform_now(document_hash) }.to raise_error(StandardError, "boom")
 

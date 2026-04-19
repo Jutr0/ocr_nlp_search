@@ -2,6 +2,7 @@ import React from 'react';
 import {Card, CardContent, Typography} from '@mui/material';
 import {Pie} from 'react-chartjs-2';
 import {ArcElement, Chart as ChartJS, Legend, Tooltip} from 'chart.js';
+import {categoryLabel} from '../../../utils/constants';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -9,7 +10,7 @@ const COLORS = ['#1976d2', '#9c27b0', '#ed6c02', '#2e7d32', '#d32f2f', '#0288d1'
 
 const CategoryPieChart = ({data}) => {
     const chartData = {
-        labels: data.map(d => d.category),
+        labels: data.map(d => categoryLabel(d.category)),
         datasets: [{
             data: data.map(d => d.count),
             backgroundColor: COLORS.slice(0, data.length),

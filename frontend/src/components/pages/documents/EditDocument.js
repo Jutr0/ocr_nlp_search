@@ -11,6 +11,7 @@ import FormSelect from "../../common/form/FormSelect";
 import FormDatePicker from "../../common/form/FormDatePicker";
 import Button from "../../common/Button";
 import dayjs from "dayjs";
+import {CATEGORY_LABELS} from "../../../utils/constants";
 
 const docTypeOptions = [
     {value: 'invoice', label: 'Invoice'},
@@ -19,15 +20,7 @@ const docTypeOptions = [
     {value: 'other', label: 'Other'},
 ];
 
-const categoryOptions = [
-    {value: 'it_services', label: 'IT Services'},
-    {value: 'office_supplies', label: 'Office Supplies'},
-    {value: 'travel_and_transportation', label: 'Travel & Transportation'},
-    {value: 'marketing_and_advertising', label: 'Marketing & Advertising'},
-    {value: 'legal_and_accounting', label: 'Legal & Accounting'},
-    {value: 'utilities_and_subscriptions', label: 'Utilities & Subscriptions'},
-    {value: 'other', label: 'Other'},
-];
+const categoryOptions = Object.entries(CATEGORY_LABELS).map(([value, label]) => ({value, label}));
 
 const currencyOptions = [
     {value: 'PLN', label: 'PLN'},
@@ -41,6 +34,7 @@ const EditDocument = () => {
     const navigate = useNavigate();
     const actions = buildActions("document");
     const [loading, setLoading] = useState(true);
+    const [filename, setFilename] = useState('');
 
     const formik = useFormik({
         initialValues: {
@@ -68,6 +62,7 @@ const EditDocument = () => {
 
     useEffect(() => {
         actions.getOne(id).then((doc) => {
+            setFilename(doc.file?.filename || '');
             formik.setValues({
                 doc_type: doc.doc_type || '',
                 category: doc.category || '',
@@ -89,8 +84,12 @@ const EditDocument = () => {
         <PageHeader icon={<DescriptionIcon color="primary"/>}
                     breadcrumbs={[
                         {label: "Documents", path: "/documents/all"},
-                        {label: "Edit"}
+                        {label: `${filename} - Edit`}
                     ]}
+                    buttons={<>
+                        <Button variant="contained" onClick={formik.handleSubmit}>Save</Button>
+                        <Button variant="outlined" onClick={() => navigate(`/documents/view/${id}`)}>Cancel</Button>
+                    </>}
         />
         <PageBody>
             <Box component="form" onSubmit={formik.handleSubmit} sx={{maxWidth: 600}}>
@@ -103,11 +102,6 @@ const EditDocument = () => {
                 <FormInput name="net_amount" label="Net Amount" type="number" formik={formik}/>
                 <FormInput name="gross_amount" label="Gross Amount" type="number" formik={formik}/>
                 <FormSelect name="currency" label="Currency" options={currencyOptions} formik={formik}/>
-
-                <Box sx={{display: 'flex', gap: 2, mt: 2}}>
-                    <Button type="submit" variant="contained">Save</Button>
-                    <Button variant="outlined" onClick={() => navigate(`/documents/view/${id}`)}>Cancel</Button>
-                </Box>
             </Box>
         </PageBody>
     </Box>

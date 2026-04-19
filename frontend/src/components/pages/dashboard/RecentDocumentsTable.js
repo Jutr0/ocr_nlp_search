@@ -1,6 +1,7 @@
 import React from 'react';
 import {Card, CardContent, Chip, Typography} from '@mui/material';
 import Table from '../../common/Table';
+import {categoryLabel} from '../../../utils/constants';
 
 const statusLabels = {
     pending: 'Pending',
@@ -27,7 +28,7 @@ const statusColors = {
 const columns = [
     {field: 'doc_number', headerName: 'Doc Number'},
     {field: 'upload_date', headerName: 'Upload Date'},
-    {field: 'category', headerName: 'Category'},
+    {field: 'category', headerName: 'Category', render: (value) => categoryLabel(value)},
     {
         field: 'status', headerName: 'Status', render: (value) => (
             <Chip

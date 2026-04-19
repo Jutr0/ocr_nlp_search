@@ -73,7 +73,7 @@ module Processing
         \"\"\"
       TEXT
 
-      Llm::Factory.build.complete(prompt, system: system_prompt)
+      Processing::Llm::Factory.build.complete(prompt, system: system_prompt, json: true)
     end
 
     def extract_decimal(val)

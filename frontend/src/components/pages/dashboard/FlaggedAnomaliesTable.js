@@ -1,10 +1,11 @@
 import React from 'react';
 import {Card, CardContent, Typography} from '@mui/material';
 import Table from '../../common/Table';
+import {categoryLabel} from '../../../utils/constants';
 
 const columns = [
     {field: 'doc_number', headerName: 'Doc Number'},
-    {field: 'category', headerName: 'Category'},
+    {field: 'category', headerName: 'Category', render: (value) => categoryLabel(value)},
     {field: 'amount', headerName: 'Amount'},
     {field: 'ocr_confidence', headerName: 'OCR %'},
     {field: 'nlp_confidence', headerName: 'NLP %'},

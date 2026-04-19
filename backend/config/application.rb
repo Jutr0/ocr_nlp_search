@@ -30,7 +30,6 @@ module Backend
     config.llm = ActiveSupport::OrderedOptions.new
     config.llm.backend = ENV.fetch("LLM_BACKEND", "openai")
     config.llm.openai_api_key = ENV.fetch("OPEN_AI_API_KEY", "")
-    config.llm.openai_url = ENV.fetch("OPENAI_URL", "https://api.openai.com/v1")
     config.llm.openai_model = ENV.fetch("OPENAI_MODEL", "gpt-3.5-turbo")
     config.llm.llama_url = ENV.fetch("LLAMA_URL", "http://localhost:11434")
     config.llm.llama_model = ENV.fetch("LLAMA_MODEL", "llama3")
