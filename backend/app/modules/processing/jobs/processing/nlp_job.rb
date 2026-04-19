@@ -1,6 +1,4 @@
-require "net/http"
 require "json"
-require "openai"
 
 module Processing
   class NlpJob < ApplicationJob
@@ -51,44 +49,31 @@ module Processing
     private
 
     def analyze_with_llm(ocr_text)
-      client = OpenAI::Client.new(access_token: Rails.configuration.open_ai_api_key)
+      system_prompt = "You are a financial document parser. Extract structured data from messy OCR text and return valid JSON."
 
-      res = client.chat(
-        parameters: {
-          model: "gpt-3.5-turbo",
-          temperature: 0,
-          messages: [
-            {
-              role: "system",
-              content: "You are a financial document parser. Extract structured data from messy OCR text and return valid JSON."
-            },
-            {
-              role: "user",
-              content: <<~TEXT
-                Return this JSON format (no explanations!):
+      prompt = <<~TEXT
+        Return this JSON format (no explanations!):
 
-                {
-                  "document_type": "invoice", // one of: invoice, bill, receipt, other
-                  "category": "it_services", // one of: it_services, office_supplies, travel_and_transportation, marketing_and_advertising, legal_and_accounting, utilities_and_subscriptions, other
-                  "invoice_number": "...",
-                  "issue_date": "YYYY-MM-DD",
-                  "net_amount": ...,
-                  "gross_amount": ...,
-                  "currency": "PLN", //currency in 3 letters
-                  "nip": "...", //must be 10 digits (no dashes)
-                  "company_name": "...",
-                  "confidence": 85 // 0-100, how confident you are in the extracted data overall
-                }
+        {
+          "document_type": "invoice", // one of: invoice, bill, receipt, other
+          "category": "it_services", // one of: it_services, office_supplies, travel_and_transportation, marketing_and_advertising, legal_and_accounting, utilities_and_subscriptions, other
+          "invoice_number": "...",
+          "issue_date": "YYYY-MM-DD",
+          "net_amount": ...,
+          "gross_amount": ...,
+          "currency": "PLN", //currency in 3 letters
+          "nip": "...", //must be 10 digits (no dashes)
+          "company_name": "...",
+          "confidence": 85 // 0-100, how confident you are in the extracted data overall
+        }
 
-                OCR TEXT:
-                \"\"\"
-                #{ocr_text}
-                \"\"\"
-              TEXT
-            }
-          ]
-        }).to_json
-      JSON.parse(res).dig("choices", 0, "message", "content")
+        OCR TEXT:
+        \"\"\"
+        #{ocr_text}
+        \"\"\"
+      TEXT
+
+      Llm::Factory.build.complete(prompt, system: system_prompt)
     end
 
     def extract_decimal(val)
