@@ -73,7 +73,8 @@ module Processing
                 invoice_number: "INV-123",
                 issue_date: "2025-07-12",
                 company_name: "Acme Co",
-                nip: "1234567890"
+                nip: "1234567890",
+                nlp_confidence: nil
               }
             )
           )

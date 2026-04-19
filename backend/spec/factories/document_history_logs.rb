@@ -1,3 +1,23 @@
+# == Schema Information
+#
+# Table name: document_history_logs
+#
+#  id             :uuid             not null, primary key
+#  action         :string           not null
+#  current_state  :string
+#  previous_state :string
+#  created_at     :datetime         not null
+#  updated_at     :datetime         not null
+#  document_id    :uuid             not null
+#
+# Indexes
+#
+#  index_document_history_logs_on_document_id  (document_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (document_id => documents.id)
+#
 FactoryBot.define do
   factory :document_history_log, class: "Documents::DocumentHistoryLog" do
     association :document

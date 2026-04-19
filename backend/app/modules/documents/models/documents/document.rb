@@ -14,6 +14,8 @@
 #  issue_date     :date
 #  net_amount     :decimal(15, 2)
 #  nip            :string(10)
+#  nlp_confidence :integer
+#  ocr_confidence :integer
 #  processed_at   :datetime
 #  status         :string           default("pending"), not null
 #  text_ocr       :text

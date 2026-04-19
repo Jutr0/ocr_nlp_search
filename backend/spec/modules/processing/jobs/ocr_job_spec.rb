@@ -70,9 +70,9 @@ module Processing
                                                          .and_return(%w[/tmp/foo-001.png /tmp/foo-002.png])
 
           allow_any_instance_of(Processing::OcrJob).to receive(:extract_text_from_image)
-                                                         .with('/tmp/foo-001.png').and_return('ONE')
+                                                         .with('/tmp/foo-001.png').and_return({ text: 'ONE', confidence: 90 })
           allow_any_instance_of(Processing::OcrJob).to receive(:extract_text_from_image)
-                                                         .with('/tmp/foo-002.png').and_return('TWO')
+                                                         .with('/tmp/foo-002.png').and_return({ text: 'TWO', confidence: 80 })
 
           OcrJob.perform_now(document_hash)
 
@@ -94,7 +94,7 @@ module Processing
         it 'uses image OCR path' do
           ocr_text = 'i got text'
           allow_any_instance_of(Processing::OcrJob).to receive(:extract_text_from_image)
-                                                         .and_return(ocr_text)
+                                                         .and_return({ text: ocr_text, confidence: 92 })
 
           OcrJob.perform_now(document_hash.merge(content_type: 'image/png'))
 

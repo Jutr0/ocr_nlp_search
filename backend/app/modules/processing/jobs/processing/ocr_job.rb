@@ -21,18 +21,20 @@ module Processing
         action: :ocr_started
       )
 
-      extracted_text = if document.content_type == "application/pdf"
-                         extract_text_from_pdf(file_path)
+      ocr_result = if document.content_type == "application/pdf"
+                      extract_text_from_pdf(file_path)
       else
-                         extract_text_from_image(file_path)
+                      extract_text_from_image(file_path)
       end
-      extracted_text = extracted_text.strip
+
+      extracted_text = ocr_result[:text].strip
+      ocr_confidence = ocr_result[:confidence]
 
       Documents::ChangeDocumentStatus.call!(
         document_id: document.document_id,
         status: :ocr_succeeded,
         action: :ocr_succeeded,
-        attributes: { text_ocr: extracted_text }
+        attributes: { text_ocr: extracted_text, ocr_confidence: ocr_confidence }
       )
 
       NlpJob.perform_later(text_ocr: extracted_text, document_id: document.document_id)
@@ -57,17 +59,37 @@ module Processing
       image.sharpen("0x1.0")
       image.normalize
       image.despeckle
-      RTesseract.new(image.path, lang: "pol", psm: 6, processor: "hocr").to_s
+
+      tesseract = RTesseract.new(image.path, lang: "pol", psm: 6, processor: "hocr")
+      text = tesseract.to_s
+      confidence = extract_hocr_confidence(tesseract)
+
+      { text: text, confidence: confidence }
     end
 
     def extract_text_from_pdf(path)
       text = extract_text_from_pdf_directly(path)
       if text.length > 100
-        text
+        { text: text, confidence: 100 }
       else
         image_paths = convert_pdf_to_images(path)
-        image_paths.map { |img| extract_text_from_image(img) }.join("\n---\n")
+        results = image_paths.map { |img| extract_text_from_image(img) }
+        combined_text = results.map { |r| r[:text] }.join("\n---\n")
+        confidences = results.map { |r| r[:confidence] }.compact
+        avg_confidence = confidences.any? ? (confidences.sum / confidences.size) : nil
+
+        { text: combined_text, confidence: avg_confidence }
       end
+    end
+
+    def extract_hocr_confidence(tesseract)
+      hocr = tesseract.to_s_without_spaces rescue nil
+      return nil unless hocr.is_a?(String)
+
+      scores = hocr.scan(/x_wconf\s+(\d+)/).flatten.map(&:to_i)
+      scores.any? ? (scores.sum / scores.size) : nil
+    rescue
+      nil
     end
 
     def convert_pdf_to_images(pdf_path)

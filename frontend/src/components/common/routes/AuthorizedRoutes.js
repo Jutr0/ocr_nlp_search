@@ -6,8 +6,10 @@ import Users from "../../pages/Users";
 import Documents from "../../pages/documents/Documents";
 import UploadDocument from "../../pages/documents/UploadDocument";
 import DocumentView from "../../pages/documents/DocumentView";
+import Dashboard from "../../pages/dashboard/Dashboard";
 
 const routes = [
+    {path: '/dashboard', component: <Dashboard/>, roles: [ROLES.USER]},
     {path: '/documents/new', component: <UploadDocument/>, roles: [ROLES.USER]},
     {path: '/documents/view/:id', component: <DocumentView/>, roles: [ROLES.USER]},
     {path: '/documents/:tab', component: <Documents/>, roles: [ROLES.USER]},

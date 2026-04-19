@@ -15,6 +15,8 @@ Rails.application.routes.draw do
     post 'users/create', to: 'users/users#create'
     get '/profile/me', to: 'users/profile#me'
 
+    get '/dashboard', to: 'documents/dashboard#show'
+
     resources :documents, controller: 'documents/documents' do
       collection do
         get :to_review

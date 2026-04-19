@@ -28,7 +28,8 @@ module Processing
         invoice_number: parsed["invoice_number"],
         issue_date: parsed["issue_date"],
         company_name: parsed["company_name"],
-        nip: parsed["nip"]
+        nip: parsed["nip"],
+        nlp_confidence: parsed["confidence"]&.to_i&.clamp(0, 100)
       }
 
       Documents::ChangeDocumentStatus.call!(
@@ -75,7 +76,8 @@ module Processing
                   "gross_amount": ...,
                   "currency": "PLN", //currency in 3 letters
                   "nip": "...", //must be 10 digits (no dashes)
-                  "company_name": "..."
+                  "company_name": "...",
+                  "confidence": 85 // 0-100, how confident you are in the extracted data overall
                 }
 
                 OCR TEXT:
