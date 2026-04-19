@@ -7,6 +7,7 @@ import Documents from "../../pages/documents/Documents";
 import UploadDocument from "../../pages/documents/UploadDocument";
 import DocumentView from "../../pages/documents/DocumentView";
 import Dashboard from "../../pages/dashboard/Dashboard";
+import NotFound from "../../pages/NotFound";
 
 const routes = [
     {path: '/dashboard', component: <Dashboard/>, roles: [ROLES.USER]},
@@ -23,6 +24,7 @@ const AuthorizedRoutes = () => {
     return <Routes>
         {currentUserRoutes.map(route => <Route
             key={route.path} path={route.path} element={route.component}/>)}
+        <Route path="*" element={<NotFound/>}/>
     </Routes>
 }
 
